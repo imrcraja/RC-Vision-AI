@@ -292,7 +292,7 @@ class MainActivity : Activity() {
         body.addView(text("Settings & privacy", 25f, Color.WHITE, true))
         val c = card()
         c.addView(text("LOCAL DATA", 12f, accent, true))
-        c.addView(text("Saved prompts stay in app-private storage. This build makes no network requests and stores no API keys.", 14f, muted))
+        c.addView(text("Saved prompts and the API bearer token stay in app-private storage. Networking is used only when you explicitly start the LAN API server; no third-party LLM API or cloud fallback is used.", 14f, muted))
         c.addView(button("Clear saved prompts") {
             workspace.clearPrompts()
             Toast.makeText(this, "Saved prompts cleared.", Toast.LENGTH_SHORT).show()
