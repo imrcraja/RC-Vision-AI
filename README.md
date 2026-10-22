@@ -12,7 +12,7 @@
 ## Current status
 The repository contains an original, randomly initialized, byte-level decoder-only Transformer trainer (training/llm/train.py) and text sampler (training/llm/generate.py). It is an early research prototype, not yet a capable general-purpose assistant. The daily GitHub Actions workflow trains from the project-owned seed corpus and may resume a cached checkpoint. No third-party model is used to answer prompts or generate the training corpus.
 
-The Android app has a native UI shell, local prompt saving/export, and device telemetry. The Chat tab is now a local-only research console. **Android inference is not integrated yet**, and no trained checkpoint is bundled in the APK. It reports this honestly rather than silently calling an external API. The original image model is a separate research pipeline and cannot produce useful prompt-based images until a suitable permitted dataset is added and the model is trained/evaluated.
+The Android app has a native UI shell, local prompt saving/export, device telemetry, and an opt-in authenticated LAN API server prototype (port 8765). The API server exposes health/model status and deliberately returns 503 for chat until local inference is integrated. Read docs/DEVICE_API.md before enabling it. The Chat tab is a local-only research console. **Android inference is not integrated yet**, and no trained checkpoint is bundled in the APK. It reports this honestly rather than silently calling an external API. The original image model is a separate research pipeline and cannot produce useful prompt-based images until a suitable permitted dataset is added and the model is trained/evaluated.
 
 ## Run research training
 Requires Python 3.10+. Install training/llm/requirements.txt, then run:
