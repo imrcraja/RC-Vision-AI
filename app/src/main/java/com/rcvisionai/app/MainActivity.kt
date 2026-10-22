@@ -292,7 +292,7 @@ class MainActivity : Activity() {
         body.addView(text("Settings & privacy", 25f, Color.WHITE, true))
         val c = card()
         c.addView(text("LOCAL DATA", 12f, accent, true))
-        c.addView(text("Saved prompts stay in app-private storage. OpenRouter chat uses Internet only when you send a request; saved API keys are encrypted with Android Keystore.", 14f, muted))
+        c.addView(text("Saved prompts stay in app-private storage. This build makes no network requests and stores no API keys.", 14f, muted))
         c.addView(button("Clear saved prompts") {
             workspace.clearPrompts()
             Toast.makeText(this, "Saved prompts cleared.", Toast.LENGTH_SHORT).show()
@@ -315,7 +315,7 @@ class MainActivity : Activity() {
 
         val about = card()
         about.addView(text("ABOUT RC VISION AI", 12f, accent, true))
-        about.addView(text("Independent project. OpenRouter can power online chat when configured. The original local LLM and rendering engines remain research prototypes.", 14f, Color.WHITE))
+        about.addView(text("Independent project by RC RAJA GAMER 2.0. The original local LLM and rendering engines remain research prototypes; no third-party LLM API is used.", 14f, Color.WHITE))
         about.addView(text("Version 0.1.0 • Runtime foundation only", 12f, muted))
         body.addView(about)
     }
