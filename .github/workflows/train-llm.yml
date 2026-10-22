@@ -1,0 +1,55 @@
+name: Train tiny original LLM experiment
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "training/llm/**"
+      - "training/corpus/**"
+      - ".github/workflows/train-llm.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: rc-vision-ai-llm-training
+  cancel-in-progress: false
+
+jobs:
+  train-small-model:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: training/llm/requirements.txt
+      - name: Install tensor/autograd library
+        run: python -m pip install --upgrade pip && python -m pip install -r training/llm/requirements.txt
+      - name: Verify training script syntax
+        run: python -m py_compile training/llm/train.py
+      - name: Train from random initialization
+        run: >-
+          python training/llm/train.py
+          --corpus training/corpus/rc_vision_original.txt
+          --output artifacts/llm
+          --steps 80
+          --batch-size 4
+          --context 64
+          --width 64
+          --layers 2
+          --heads 2
+          --checkpoint-every 20
+          --seed 20261022
+      - name: Upload measured checkpoint and metrics
+        uses: actions/upload-artifact@v4
+        with:
+          name: rc-vision-ai-original-llm-research-checkpoint
+          path: artifacts/llm/
+          if-no-files-found: error
+          retention-days: 14
