@@ -8,7 +8,7 @@ on:
       - "gradle.properties"
       - ".github/workflows/android-apk.yml"
   push:
-    branches: [main]
+    branches: [main, feature/independent-local-llm]
     paths:
       - "app/**"
       - "*.gradle.kts"
