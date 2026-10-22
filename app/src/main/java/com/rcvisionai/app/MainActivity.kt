@@ -1,0 +1,247 @@
+package com.rcvisionai.app
+
+import android.app.Activity
+import android.graphics.Color
+import android.graphics.Typeface
+import android.graphics.drawable.GradientDrawable
+import android.os.Bundle
+import android.view.Gravity
+import android.view.View
+import android.view.ViewGroup
+import android.widget.Button
+import android.widget.EditText
+import android.widget.LinearLayout
+import android.widget.ScrollView
+import android.widget.TextView
+import android.widget.Toast
+
+class MainActivity : Activity() {
+    private val bg = Color.rgb(12, 15, 23)
+    private val panel = Color.rgb(23, 28, 40)
+    private val accent = Color.rgb(95, 145, 255)
+    private val muted = Color.rgb(164, 174, 194)
+    private lateinit var root: LinearLayout
+    private lateinit var body: LinearLayout
+    private lateinit var workspace: LocalWorkspace
+    private var currentTab = "Create"
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        workspace = LocalWorkspace(this)
+        window.statusBarColor = bg
+        window.navigationBarColor = bg
+        window.decorView.systemUiVisibility = 0
+        showScreen("Create")
+    }
+
+    private fun dp(value: Int): Int = (value * resources.displayMetrics.density).toInt()
+
+    private fun rounded(color: Int, radius: Int = 18): GradientDrawable =
+        GradientDrawable().apply {
+            setColor(color)
+            cornerRadius = dp(radius).toFloat()
+        }
+
+    private fun text(value: String, size: Float, color: Int = Color.WHITE, bold: Boolean = false): TextView =
+        TextView(this).apply {
+            text = value
+            textSize = size
+            setTextColor(color)
+            if (bold) setTypeface(typeface, Typeface.BOLD)
+            setPadding(dp(2), dp(3), dp(2), dp(3))
+        }
+
+    private fun button(label: String, action: () -> Unit): Button =
+        Button(this).apply {
+            text = label
+            isAllCaps = false
+            textSize = 14f
+            setTextColor(Color.WHITE)
+            background = rounded(accent, 14)
+            setPadding(dp(12), dp(5), dp(12), dp(5))
+            setOnClickListener { action() }
+        }
+
+    private fun card(): LinearLayout = LinearLayout(this).apply {
+        orientation = LinearLayout.VERTICAL
+        setPadding(dp(16), dp(15), dp(16), dp(15))
+        background = rounded(panel)
+        layoutParams = LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
+        ).apply { bottomMargin = dp(12) }
+    }
+
+    private fun showScreen(tab: String) {
+        currentTab = tab
+        root = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setBackgroundColor(bg)
+            setPadding(dp(18), dp(14), dp(18), dp(8))
+        }
+        setContentView(root)
+
+        val header = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+        }
+        val brand = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        brand.addView(text("RC VISION AI", 22f, Color.WHITE, true))
+        brand.addView(text("PRIVATE • LOCAL-FIRST • IN DEVELOPMENT", 10f, muted))
+        header.addView(brand, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
+        header.addView(text("v0.1.0", 12f, muted))
+        root.addView(header)
+
+        val scroll = ScrollView(this)
+        body = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(0, dp(18), 0, dp(12))
+        }
+        scroll.addView(body)
+        root.addView(scroll, LinearLayout.LayoutParams(1, 0, 1f))
+
+        when (tab) {
+            "Create" -> createPage()
+            "Chat" -> chatPage()
+            "Train" -> trainPage()
+            else -> settingsPage()
+        }
+
+        val nav = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER
+            setPadding(0, dp(6), 0, dp(2))
+        }
+        listOf("Create", "Chat", "Train", "Settings").forEach { name ->
+            val item = TextView(this).apply {
+                text = if (name == tab) "●  $name" else name
+                textSize = 12f
+                gravity = Gravity.CENTER
+                setTextColor(if (name == tab) Color.WHITE else muted)
+                setPadding(dp(7), dp(12), dp(7), dp(12))
+                setOnClickListener { showScreen(name) }
+            }
+            nav.addView(item, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
+        }
+        root.addView(nav)
+    }
+
+    private fun createPage() {
+        body.addView(text("Create something original.", 25f, Color.WHITE, true))
+        body.addView(text("Your prompt workspace is ready. The original image model is not trained yet, so this build will not pretend to generate images.", 14f, muted).apply {
+            setPadding(dp(2), dp(6), dp(2), dp(18))
+        })
+
+        val promptCard = card()
+        promptCard.addView(text("IMAGE PROMPT", 12f, accent, true))
+        val prompt = EditText(this).apply {
+            hint = "Describe the image you want to create…"
+            setHintTextColor(muted)
+            setTextColor(Color.WHITE)
+            textSize = 16f
+            gravity = Gravity.TOP
+            minLines = 5
+            maxLines = 9
+            setPadding(dp(12), dp(12), dp(12), dp(12))
+            background = rounded(Color.rgb(14, 18, 28), 12)
+            setText(workspace.latestPrompt())
+        }
+        promptCard.addView(prompt, LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
+        ).apply { topMargin = dp(10) })
+        val actions = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(0, dp(10), 0, 0)
+        }
+        actions.addView(button("Save prompt") {
+            val value = prompt.text.toString().trim()
+            if (value.isEmpty()) {
+                Toast.makeText(this, "Pehle prompt likho.", Toast.LENGTH_SHORT).show()
+            } else {
+                workspace.savePrompt(value)
+                Toast.makeText(this, "Prompt is device par save ho gaya.", Toast.LENGTH_SHORT).show()
+            }
+        }, LinearLayout.LayoutParams(0, dp(48), 1f))
+        actions.addView(View(this), LinearLayout.LayoutParams(dp(8), 1))
+        actions.addView(button("Generate") {
+            val value = prompt.text.toString().trim()
+            if (value.isEmpty()) {
+                Toast.makeText(this, "Pehle prompt likho.", Toast.LENGTH_SHORT).show()
+            } else {
+                workspace.savePrompt(value)
+                Toast.makeText(this, "Original image model abhi develop/train hona baaki hai. Koi fake output nahi banaya.", Toast.LENGTH_LONG).show()
+            }
+        }, LinearLayout.LayoutParams(0, dp(48), 1f))
+        promptCard.addView(actions)
+        body.addView(promptCard)
+
+        val status = card()
+        status.addView(text("ENGINE STATUS", 12f, accent, true))
+        status.addView(text("LLM core", 16f, Color.WHITE, true))
+        status.addView(text("Not implemented — original model research is pending.", 13f, muted))
+        status.addView(text("Image generation", 16f, Color.WHITE, true).apply { setPadding(0, dp(10), 0, 0) })
+        status.addView(text("Not available until a trained original model exists.", 13f, muted))
+        body.addView(status)
+
+        val history = card()
+        history.addView(text("RECENT PROMPTS", 12f, accent, true))
+        val prompts = workspace.getPrompts().take(5)
+        if (prompts.isEmpty()) {
+            history.addView(text("Saved prompts will appear here.", 13f, muted))
+        } else {
+            prompts.forEach { saved ->
+                val item = text("•  $saved", 13f, Color.WHITE)
+                item.setOnClickListener {
+                    prompt.setText(saved)
+                    prompt.setSelection(prompt.text.length)
+                }
+                history.addView(item)
+            }
+        }
+        body.addView(history)
+    }
+
+    private fun chatPage() {
+        body.addView(text("RC Vision Chat", 25f, Color.WHITE, true))
+        body.addView(text("The local LLM is a separate original-model milestone. No cloud model or third-party AI API is connected.", 14f, muted))
+        val c = card()
+        c.addView(text("MODEL STATUS", 12f, accent, true))
+        c.addView(text("No trained LLM loaded", 18f, Color.WHITE, true))
+        c.addView(text("Chat responses will be enabled when our own language model and local inference runtime are implemented.", 13f, muted))
+        body.addView(c)
+    }
+
+    private fun trainPage() {
+        body.addView(text("Training Lab", 25f, Color.WHITE, true))
+        body.addView(text("A safe place to plan and inspect future training jobs. No model is being trained by this starter build.", 14f, muted))
+        val c = card()
+        c.addView(text("TRAINING PIPELINE", 12f, accent, true))
+        c.addView(text("1. Dataset manifest and permission metadata", 14f))
+        c.addView(text("2. Original model architecture", 14f))
+        c.addView(text("3. Local training loop and checkpoints", 14f))
+        c.addView(text("4. Evaluation before model activation", 14f))
+        c.addView(text("Training is compute-intensive. The app must measure actual device capability before attempting any heavy job.", 13f, muted))
+        body.addView(c)
+    }
+
+    private fun settingsPage() {
+        body.addView(text("Settings & privacy", 25f, Color.WHITE, true))
+        val c = card()
+        c.addView(text("LOCAL DATA", 12f, accent, true))
+        c.addView(text("This starter app has no Internet permission and makes no network requests. Saved prompts stay in app-private storage.", 14f, muted))
+        c.addView(button("Clear saved prompts") {
+            workspace.clearPrompts()
+            Toast.makeText(this, "Saved prompts cleared.", Toast.LENGTH_SHORT).show()
+            showScreen("Settings")
+        }, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(48)).apply {
+            topMargin = dp(14)
+        })
+        body.addView(c)
+
+        val about = card()
+        about.addView(text("ABOUT RC VISION AI", 12f, accent, true))
+        about.addView(text("Independent project. No third-party AI APIs, no bundled pretrained model, and no external AI engine.", 14f, Color.WHITE))
+        about.addView(text("Version 0.1.0 • Runtime foundation only", 12f, muted))
+        body.addView(about)
+    }
+}
