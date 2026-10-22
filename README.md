@@ -23,12 +23,12 @@ This is an early engineering foundation, **not yet an image generator**. The sta
 Requires Python 3.10 or newer. No third-party Python packages are required for the starter runtime.
 
 ```bash
-python -m rc_vision_ai status
-python -m rc_vision_ai monitor
-python -m unittest discover -s tests -v
+PYTHONPATH=src python -m rc_vision_ai status
+PYTHONPATH=src python -m rc_vision_ai monitor
+PYTHONPATH=src python -m unittest discover -s tests -v
 ```
 
-Run from the repository root. On Android, use a Python environment such as Termux; available telemetry varies by device and OS.
+Run from the repository root. These commands use the Python standard library at runtime; the optional packaging metadata is for future installation workflows. On Android, use a Python environment such as Termux; available telemetry varies by device and OS.
 
 ## Planned milestones
 
