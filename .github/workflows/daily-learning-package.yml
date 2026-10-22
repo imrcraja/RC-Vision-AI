@@ -41,7 +41,7 @@ jobs:
 
       - name: Run ZIP packaging tests and syntax checks
         run: |
-          python -m py_compile training/llm/train.py training/llm/generate.py training/llm/gemini_corpus.py training/image/train_autoencoder.py training/package_daily_learning.py
+          python -m py_compile training/llm/train.py training/llm/generate.py training/llm/gemini_corpus.py training/image/train_autoencoder.py training/image/train_diffusion.py training/image/generate_image.py training/image/model.py training/package_daily_learning.py
           python -m unittest discover -s tests -p 'test_daily_package.py' -v
 
       - name: Restore best-effort prior LLM checkpoint cache
@@ -98,14 +98,18 @@ jobs:
             --checkpoint-every 250 \
             "${RESUME_ARGS[@]}"
 
-      - name: Train image reconstruction baseline when a permitted dataset exists
+      - name: Train original image model when a permitted dataset exists
         shell: bash
         run: |
-          image_count="$(find training/images -type f \( -iname '*.png' -o -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.webp' -o -iname '*.bmp' \) 2>/dev/null | wc -l)"
-          if [ "$image_count" -ge 2 ]; then
-            python training/image/train_autoencoder.py --dataset training/images --output artifacts/image --image-size 64 --epochs 1 --batch-size 4
+          if [ -f training/images/captions.jsonl ] && [ "$(grep -c '"caption"' training/images/captions.jsonl || true)" -ge 2 ]; then
+            python training/image/train_diffusion.py --dataset training/images --manifest training/images/captions.jsonl --output artifacts/image --image-size 32 --epochs 1 --batch-size 2 --diffusion-steps 50
           else
-            echo "Image training skipped: add at least 2 permission-cleared images under training/images/."
+            image_count="$(find training/images -type f \( -iname '*.png' -o -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.webp' -o -iname '*.bmp' \) 2>/dev/null | wc -l)"
+            if [ "$image_count" -ge 2 ]; then
+              python training/image/train_autoencoder.py --dataset training/images --output artifacts/image --image-size 64 --epochs 1 --batch-size 4
+            else
+              echo "Image training skipped: add at least 2 permitted images; for conditional diffusion, also add captions.jsonl with at least 2 image/caption pairs."
+            fi
           fi
 
       - name: Save best-effort LLM checkpoint cache
