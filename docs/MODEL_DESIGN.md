@@ -26,6 +26,8 @@ Candidate research path:
 - save and validate checkpoints with explicit schema and checksums
 - measure reconstruction/generation quality, memory use, speed, and thermal behavior
 
+The first implementation is `training/image/train_autoencoder.py`: a tiny convolutional autoencoder that reconstructs fixed-size images. It is not text-conditioned and must not be marketed as prompt-based image generation. The scheduled workflow only trains it when at least two permitted images exist in `training/images/`.
+
 ## 3. Android constraints
 
 - The APK is a native Kotlin app using Android platform APIs, without AndroidX or third-party runtime libraries in this starter.
@@ -34,7 +36,11 @@ Candidate research path:
 - Android's app UI and the model runtime should be separated. Heavy tasks run off the UI thread and must be cancellable.
 - Training directly on a phone is a later experiment, not a promise of unlimited compute.
 
-## 4. Non-negotiable integrity rules
+## 4. Daily learning export
+
+`training/package_daily_learning.py` creates a versioned ZIP containing available model artifacts, metrics/metadata, the selected training corpus, a SHA-256 manifest, and empty templates for memory, knowledge, skills, and evaluation records. It does not have access to Android private storage and does not invent or automatically import phone memories. A future Android export/import feature must explicitly transfer user-approved local state and validate hashes/configuration before loading checkpoints.
+
+## 5. Non-negotiable integrity rules
 
 - Never label a random or untrained network as a functioning image generator or assistant.
 - Never show invented progress percentages. Use measured steps, batches, or explicit stage states.
