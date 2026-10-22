@@ -58,7 +58,7 @@ def generate(api_key: str, model: str, topic: str, max_tokens: int) -> str:
     message = choices[0].get("message", {}) if choices else {}
     text = message.get("content", "")
     if isinstance(text, list):
-        text = "\\n".join(p.get("text", "") for p in text if isinstance(p, dict))
+        text = "\n".join(p.get("text", "") for p in text if isinstance(p, dict))
     if not isinstance(text, str) or len(text.strip()) < 100:
         raise RuntimeError("OpenRouter returned too little text; no section was accepted.")
     return text.strip()
@@ -86,7 +86,7 @@ def main() -> int:
         if index < args.topics:
             time.sleep(2)
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_text("\\n\\n---\\n\\n".join(sections) + "\\n", encoding="utf-8")
+    args.output.write_text("\n\n---\n\n".join(sections) + "\n", encoding="utf-8")
     print(f"Wrote {args.topics} generated sections; corpus bytes={args.output.stat().st_size}")
     return 0
 
