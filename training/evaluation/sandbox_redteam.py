@@ -40,7 +40,9 @@ def audit(path: Path) -> list[str]:
         elif isinstance(node, ast.Call):
             name = dotted_name(node.func)
             leaf = name.rsplit(".", 1)[-1]
-            if leaf in BLOCKED_CALLS:
+            is_builtin_dynamic_code = name in {"eval", "exec"}
+            is_process_or_shell = leaf in {"system", "popen", "Popen", "run", "check_call", "check_output"}
+            if is_builtin_dynamic_code or is_process_or_shell:
                 issues.append(f"{path.relative_to(ROOT)} calls potentially unsafe function {name}")
     return issues
 
