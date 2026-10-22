@@ -268,10 +268,10 @@ class MainActivity : Activity() {
     }
 
     private fun chatPage() {
-        OpenRouterChatPanel.render(this, body)
+        LocalModelPanel.render(this, body)
         val local = card()
         local.addView(text("LOCAL MODEL STATUS", 12f, accent, true))
-        local.addView(text("Original LLM abhi research/training stage mein hai; OpenRouter chat cloud API se chalta hai aur local model ka replacement nahi hai.", 13f, muted))
+        local.addView(text("Original LLM hamara khud ka model hai. Koi third-party LLM API ya cloud fallback use nahi hota. Android inference abhi integrate hona baaki hai.", 13f, muted))
         body.addView(local)
     }
 
@@ -292,7 +292,7 @@ class MainActivity : Activity() {
         body.addView(text("Settings & privacy", 25f, Color.WHITE, true))
         val c = card()
         c.addView(text("LOCAL DATA", 12f, accent, true))
-        c.addView(text("Saved prompts stay in app-private storage. OpenRouter chat uses Internet only when you send a request; saved API keys are encrypted with Android Keystore.", 14f, muted))
+        c.addView(text("Saved prompts and the API bearer token stay in app-private storage. Networking is used only when you explicitly start the LAN API server; no third-party LLM API or cloud fallback is used.", 14f, muted))
         c.addView(button("Clear saved prompts") {
             workspace.clearPrompts()
             Toast.makeText(this, "Saved prompts cleared.", Toast.LENGTH_SHORT).show()
@@ -302,6 +302,10 @@ class MainActivity : Activity() {
         })
         DeviceMonitorPanel.render(this, c)
         body.addView(c)
+
+        val api = card()
+        ModelApiPanel.render(this, api)
+        body.addView(api)
 
         val export = card()
         export.addView(text("LEARNING EXPORT", 12f, accent, true))
@@ -315,7 +319,7 @@ class MainActivity : Activity() {
 
         val about = card()
         about.addView(text("ABOUT RC VISION AI", 12f, accent, true))
-        about.addView(text("Independent project. OpenRouter can power online chat when configured. The original local LLM and rendering engines remain research prototypes.", 14f, Color.WHITE))
+        about.addView(text("Independent project by RC RAJA GAMER 2.0. The original local LLM and rendering engines remain research prototypes; no third-party LLM API is used.", 14f, Color.WHITE))
         about.addView(text("Version 0.1.0 • Runtime foundation only", 12f, muted))
         body.addView(about)
     }

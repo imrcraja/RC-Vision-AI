@@ -1,4 +1,4 @@
-name: Daily learning package and model research
+name: Daily original-model training package
 
 on:
   workflow_dispatch:
@@ -7,8 +7,10 @@ on:
   push:
     branches: [main]
     paths:
-      - "training/package_daily_learning.py"
+      - "training/llm/**"
+      - "training/corpus/**"
       - "training/image/**"
+      - "training/package_daily_learning.py"
       - "tests/test_daily_package.py"
       - ".github/workflows/daily-learning-package.yml"
 
@@ -23,30 +25,27 @@ jobs:
   daily-package:
     runs-on: ubuntu-latest
     timeout-minutes: 45
-    env:
-      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-      OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
-      OPENROUTER_MODEL: ${{ vars.OPENROUTER_MODEL }}
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
-
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
           cache: pip
           cache-dependency-path: training/llm/requirements.txt
-
-      - name: Install training and image research dependencies
+      - name: Install local training dependencies
         run: python -m pip install --upgrade pip && python -m pip install -r training/llm/requirements.txt pillow
-
       - name: Run ZIP packaging tests and syntax checks
         run: |
-          python -m py_compile training/llm/train.py training/llm/generate.py training/llm/gemini_corpus.py training/llm/openrouter_corpus.py training/image/train_autoencoder.py training/image/train_diffusion.py training/image/generate_image.py training/image/model.py training/image/test_research.py training/package_daily_learning.py
+          python -m py_compile training/llm/train.py training/llm/generate.py training/image/train_autoencoder.py training/image/train_diffusion.py training/image/generate_image.py training/image/model.py training/image/test_research.py training/package_daily_learning.py
           python -m unittest discover -s tests -p 'test_daily_package.py' -v
           PYTHONPATH=training/image python -m unittest discover -s training/image -p 'test_research.py' -v
-
+      - name: Use the project-owned seed corpus only
+        run: |
+          mkdir -p artifacts
+          cp training/corpus/rc_vision_original.txt artifacts/daily-training-corpus.txt
+          echo "External LLM APIs are disabled. Training uses the repository-owned seed corpus."
       - name: Restore best-effort prior LLM checkpoint cache
         uses: actions/cache/restore@v4
         with:
@@ -54,26 +53,6 @@ jobs:
           key: rc-vision-ai-daily-llm-${{ github.run_id }}
           restore-keys: |
             rc-vision-ai-daily-llm-
-
-      - name: Prepare daily training corpus
-        shell: bash
-        run: |
-          mkdir -p artifacts
-          if [ -n "$OPENROUTER_API_KEY" ]; then
-            python training/llm/openrouter_corpus.py \
-              --base-corpus training/corpus/rc_vision_original.txt \
-              --output artifacts/daily-training-corpus.txt \
-              --topics 2
-          elif [ -n "$GEMINI_API_KEY" ]; then
-            python training/llm/gemini_corpus.py \
-              --base-corpus training/corpus/rc_vision_original.txt \
-              --output artifacts/daily-training-corpus.txt \
-              --topics 2
-          else
-            cp training/corpus/rc_vision_original.txt artifacts/daily-training-corpus.txt
-            echo "No OPENROUTER_API_KEY or GEMINI_API_KEY is configured; using the checked-in seed corpus today."
-          fi
-
       - name: Locate a compatible cached LLM checkpoint
         id: prior
         shell: bash
@@ -87,8 +66,7 @@ jobs:
             echo "path=" >> "$GITHUB_OUTPUT"
             echo "No cached checkpoint; this run starts from random initialization."
           fi
-
-      - name: Train or continue the original LLM
+      - name: Train or continue our original LLM
         shell: bash
         run: |
           RESUME_ARGS=()
@@ -98,15 +76,8 @@ jobs:
           python training/llm/train.py \
             --corpus artifacts/daily-training-corpus.txt \
             --output artifacts/llm \
-            --steps 500 \
-            --batch-size 8 \
-            --context 128 \
-            --width 128 \
-            --layers 4 \
-            --heads 4 \
-            --checkpoint-every 250 \
-            "${RESUME_ARGS[@]}"
-
+            --steps 500 --batch-size 8 --context 128 --width 128 --layers 4 --heads 4 \
+            --checkpoint-every 250 "${RESUME_ARGS[@]}"
       - name: Train original image model when a permitted dataset exists
         shell: bash
         run: |
@@ -117,36 +88,25 @@ jobs:
             if [ "$image_count" -ge 2 ]; then
               python training/image/train_autoencoder.py --dataset training/images --output artifacts/image --image-size 64 --epochs 1 --batch-size 4
             else
-              echo "Image training skipped: add at least 2 permitted images; for conditional diffusion, also add captions.jsonl with at least 2 image/caption pairs."
+              echo "Image training skipped: add at least 2 permitted images; conditional diffusion also needs captions.jsonl."
             fi
           fi
-
       - name: Smoke-test conditional image sampling when a checkpoint exists
         shell: bash
         run: |
           if [ -f artifacts/image/conditional-diffusion.pt ]; then
-            PYTHONPATH=training/image python training/image/generate_image.py \
-              --checkpoint artifacts/image/conditional-diffusion.pt \
-              --prompt "a simple original research sample" \
-              --output artifacts/image/sample.png
+            PYTHONPATH=training/image python training/image/generate_image.py --checkpoint artifacts/image/conditional-diffusion.pt --prompt "a simple original research sample" --output artifacts/image/sample.png
           else
-            echo "No conditional diffusion checkpoint exists yet; no prompt-based image sample is claimed."
+            echo "No conditional diffusion checkpoint exists; no prompt-based image sample is claimed."
           fi
-
       - name: Save best-effort LLM checkpoint cache
         uses: actions/cache/save@v4
         with:
           path: artifacts/llm
           key: rc-vision-ai-daily-llm-${{ github.run_id }}
-
       - name: Build daily learning ZIP
         run: |
-          python training/package_daily_learning.py \
-            --output artifacts/rc-vision-ai-daily-learning.zip \
-            --llm-dir artifacts/llm \
-            --image-dir artifacts/image \
-            --corpus artifacts/daily-training-corpus.txt
-
+          python training/package_daily_learning.py --output artifacts/rc-vision-ai-daily-learning.zip --llm-dir artifacts/llm --image-dir artifacts/image --corpus artifacts/daily-training-corpus.txt
       - name: Upload daily ZIP and raw metrics
         uses: actions/upload-artifact@v4
         with:

@@ -7,7 +7,7 @@ import android.graphics.Color
 import android.graphics.Typeface
 import android.os.BatteryManager
 import android.os.Build
-import android.os.Choreographer
+import android.view.Choreographer
 import android.os.PowerManager
 import android.os.SystemClock
 import android.view.ViewGroup
@@ -95,6 +95,6 @@ internal object DeviceMonitorPanel {
         TextView(a).apply {
             text = value; textSize = size; setTextColor(color)
             if (bold) setTypeface(typeface, Typeface.BOLD)
-            setPadding(2, 5, 2, 7); textIsSelectable = true
+            setPadding(2, 5, 2, 7); setTextIsSelectable(true)
         }
 }
