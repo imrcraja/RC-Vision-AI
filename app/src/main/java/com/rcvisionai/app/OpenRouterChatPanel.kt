@@ -74,7 +74,8 @@ internal object OpenRouterChatPanel {
             text = "Send to OpenRouter"; isAllCaps = false; setTextColor(Color.WHITE); background = rounded(accent)
         }
         host.addView(send, matchWrap())
-        val batch = Button(activity).apply {
+        lateinit var batch: Button
+        batch = Button(activity).apply {
             text = "Run multiple tasks (one per line)"; isAllCaps = false
             setOnClickListener {
                 if (busy) return@setOnClickListener
