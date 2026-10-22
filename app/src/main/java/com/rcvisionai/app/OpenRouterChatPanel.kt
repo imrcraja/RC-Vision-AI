@@ -74,6 +74,49 @@ internal object OpenRouterChatPanel {
             text = "Send to OpenRouter"; isAllCaps = false; setTextColor(Color.WHITE); background = rounded(accent)
         }
         host.addView(send, matchWrap())
+        val batch = Button(activity).apply {
+            text = "Run multiple tasks (one per line)"; isAllCaps = false
+            setOnClickListener {
+                if (busy) return@setOnClickListener
+                val token = key.text.toString().trim().ifEmpty { ApiKeyVault.load(activity).orEmpty() }
+                val modelId = model.text.toString().trim().ifEmpty { "openrouter/auto" }
+                val tasks = prompt.text.toString().lines().map { it.trim() }.filter { it.isNotEmpty() }
+                if (token.isBlank()) {
+                    addLine(activity, transcript, "Status", "Pehle API key enter karke Save encrypted key dabao.")
+                    return@setOnClickListener
+                }
+                if (tasks.isEmpty()) {
+                    addLine(activity, transcript, "Status", "Har task ko alag line par likho.")
+                    return@setOnClickListener
+                }
+                busy = true
+                send.isEnabled = false
+                batch.isEnabled = false
+                batch.text = "Batch running…"
+                prompt.setText("")
+                addLine(activity, transcript, "Batch", "0/${tasks.size} tasks complete. Sequentially process ho rahe hain.")
+                thread(name = "openrouter-batch") {
+                    tasks.forEachIndexed { index, task ->
+                        activity.runOnUiThread { addLine(activity, transcript, "Progress", "Task ${index + 1}/${tasks.size}: ${task.take(100)}") }
+                        val single = JSONArray().put(JSONObject().put("role", "user").put("content", task))
+                        val (answer, error) = request(token, modelId, single)
+                        activity.runOnUiThread {
+                            addLine(activity, transcript, if (answer != null) "Task ${index + 1} result" else "Task ${index + 1} error", answer ?: (error ?: "Unknown error"))
+                            addLine(activity, transcript, "Progress", "${index + 1}/${tasks.size} tasks processed")
+                            scroll.post { scroll.fullScroll(View.FOCUS_DOWN) }
+                        }
+                    }
+                    activity.runOnUiThread {
+                        addLine(activity, transcript, "Batch status", "All ${tasks.size} tasks processed. Check each result/error above.")
+                        busy = false
+                        send.isEnabled = true
+                        batch.isEnabled = true
+                        batch.text = "Run multiple tasks (one per line)"
+                    }
+                }
+            }
+        }
+        host.addView(batch, matchWrap())
         val messages = JSONArray()
         var busy = false
         send.setOnClickListener {
