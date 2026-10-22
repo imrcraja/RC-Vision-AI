@@ -24,7 +24,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 45
     env:
-      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}\n      OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}\n      OPENROUTER_MODEL: ${{ vars.OPENROUTER_MODEL }}
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+      OPENROUTER_MODEL: ${{ vars.OPENROUTER_MODEL }}
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
