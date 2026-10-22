@@ -26,11 +26,38 @@ internal object OpenRouterChatPanel {
 
     fun render(activity: Activity, host: LinearLayout) {
         host.addView(label(activity, "RC Vision Chat", 25f, Color.WHITE, true))
-        host.addView(label(activity, "Online API chat. API key app restart par dobara enter karni hogi; yeh app mein save nahi hoti.", 14f, muted, false))
-        val key = field(activity, "Rotated OpenRouter API key", true)
+        host.addView(label(activity, "Online API chat. Save karne par key Android Keystore se encrypted form mein device par rahegi.", 14f, muted, false))
+        val key = field(activity, "OpenRouter API key", true).apply { setText(ApiKeyVault.load(activity).orEmpty()) }
         val model = field(activity, "Model ID", false).apply { setText("openrouter/auto") }
         host.addView(label(activity, "PRIVATE API KEY", 12f, accent, true))
         host.addView(key, matchWrap())
+        val keyActions = LinearLayout(activity).apply { orientation = LinearLayout.HORIZONTAL }
+        val saveKey = Button(activity).apply {
+            text = "Save encrypted key"; isAllCaps = false
+            setOnClickListener {
+                val value = key.text.toString().trim()
+                if (!value.startsWith("sk-or-")) {
+                    addLine(activity, transcriptPlaceholder(activity), "Status", "OpenRouter key format check karo.")
+                } else {
+                    try {
+                        ApiKeyVault.save(activity, value)
+                        android.widget.Toast.makeText(activity, "Key device par encrypted save ho gayi.", android.widget.Toast.LENGTH_LONG).show()
+                    } catch (e: Exception) {
+                        android.widget.Toast.makeText(activity, "Key save fail: ${e.message}", android.widget.Toast.LENGTH_LONG).show()
+                    }
+                }
+            }
+        }
+        val forgetKey = Button(activity).apply {
+            text = "Forget key"; isAllCaps = false
+            setOnClickListener {
+                ApiKeyVault.clear(activity); key.setText("")
+                android.widget.Toast.makeText(activity, "Saved key clear ho gayi.", android.widget.Toast.LENGTH_SHORT).show()
+            }
+        }
+        keyActions.addView(saveKey, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
+        keyActions.addView(forgetKey, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
+        host.addView(keyActions, matchWrap())
         host.addView(label(activity, "MODEL ID", 12f, accent, true))
         host.addView(model, matchWrap())
 
@@ -54,7 +81,7 @@ internal object OpenRouterChatPanel {
             val token = key.text.toString().trim()
             val modelId = model.text.toString().trim().ifEmpty { "openrouter/auto" }
             val userText = prompt.text.toString().trim()
-            if (token.isBlank()) { addLine(activity, transcript, "Status", "Nayi rotated API key enter karo."); return@setOnClickListener }
+            if (token.isBlank()) { addLine(activity, transcript, "Status", "OpenRouter API key enter karo."); return@setOnClickListener }
             if (userText.isBlank()) { addLine(activity, transcript, "Status", "Pehle message likho."); return@setOnClickListener }
             messages.put(JSONObject().put("role", "user").put("content", userText))
             addLine(activity, transcript, "You", userText)
@@ -79,7 +106,7 @@ internal object OpenRouterChatPanel {
         host.addView(label(activity, "Note: yeh API chat hai. Is build mein abhi isolated code sandbox / tool execution connected nahi hai.", 12f, muted, false))
     }
 
-    private fun request(token: String, model: String, messages: JSONArray): Pair<String?, String?> {
+    private fun transcriptPlaceholder(activity: Activity) = LinearLayout(activity).apply { orientation = LinearLayout.VERTICAL }\n\n    private fun request(token: String, model: String, messages: JSONArray): Pair<String?, String?> {
         var conn: HttpURLConnection? = null
         return try {
             conn = (URL(ENDPOINT).openConnection() as HttpURLConnection).apply {
