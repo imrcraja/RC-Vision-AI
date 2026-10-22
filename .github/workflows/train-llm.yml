@@ -1,4 +1,4 @@
-name: Train tiny original LLM experiment
+name: Train expanded original LLM experiment
 
 on:
   push:
@@ -19,7 +19,7 @@ concurrency:
 jobs:
   train-small-model:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 45
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
@@ -38,25 +38,25 @@ jobs:
           python training/llm/train.py
           --corpus training/corpus/rc_vision_original.txt
           --output artifacts/llm
-          --steps 500
-          --batch-size 4
-          --context 64
-          --width 64
-          --layers 2
-          --heads 2
-          --checkpoint-every 100
+          --steps 2000
+          --batch-size 8
+          --context 128
+          --width 128
+          --layers 4
+          --heads 4
+          --checkpoint-every 250
           --seed 20261022
       - name: Smoke-test local sampling from the trained checkpoint
         run: >-
           python training/llm/generate.py
-          --checkpoint artifacts/llm/checkpoint-0000500.pt
+          --checkpoint artifacts/llm/checkpoint-0002000.pt
           --prompt "RC Vision AI is"
           --new-bytes 96
           --seed 7
       - name: Upload measured checkpoint and metrics
         uses: actions/upload-artifact@v4
         with:
-          name: rc-vision-ai-original-llm-research-checkpoint
+          name: rc-vision-ai-expanded-llm-research-checkpoint
           path: artifacts/llm/
           if-no-files-found: error
           retention-days: 14
