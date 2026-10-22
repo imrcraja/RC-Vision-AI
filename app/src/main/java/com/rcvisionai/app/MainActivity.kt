@@ -303,6 +303,10 @@ class MainActivity : Activity() {
         DeviceMonitorPanel.render(this, c)
         body.addView(c)
 
+        val api = card()
+        ModelApiPanel.render(this, api)
+        body.addView(api)
+
         val export = card()
         export.addView(text("LEARNING EXPORT", 12f, accent, true))
         export.addView(text("A best-effort daily job saves a ZIP in app-private storage after you first open the app. Export saved prompts and empty learning templates to a chosen location for review. No trained model weights or inferred memories are included yet.", 14f, muted))
