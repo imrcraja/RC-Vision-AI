@@ -97,7 +97,7 @@ class MainActivity : Activity() {
             setPadding(0, dp(18), 0, dp(12))
         }
         scroll.addView(body)
-        root.addView(scroll, LinearLayout.LayoutParams(1, 0, 1f))
+        root.addView(scroll, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f))
 
         when (tab) {
             "Create" -> createPage()
