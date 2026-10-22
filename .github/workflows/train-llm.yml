@@ -46,6 +46,13 @@ jobs:
           --heads 2
           --checkpoint-every 20
           --seed 20261022
+      - name: Smoke-test local sampling from the trained checkpoint
+        run: >-
+          python training/llm/generate.py
+          --checkpoint artifacts/llm/checkpoint-0000080.pt
+          --prompt "RC Vision AI is"
+          --new-bytes 96
+          --seed 7
       - name: Upload measured checkpoint and metrics
         uses: actions/upload-artifact@v4
         with:
