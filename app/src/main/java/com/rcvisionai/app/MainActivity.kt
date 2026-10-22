@@ -268,13 +268,11 @@ class MainActivity : Activity() {
     }
 
     private fun chatPage() {
-        body.addView(text("RC Vision Chat", 25f, Color.WHITE, true))
-        body.addView(text("The local LLM is a separate original-model milestone. No cloud model or third-party AI API is connected.", 14f, muted))
-        val c = card()
-        c.addView(text("MODEL STATUS", 12f, accent, true))
-        c.addView(text("No trained LLM loaded", 18f, Color.WHITE, true))
-        c.addView(text("A random-init Transformer trainer and local sampling CLI now exist in the repository. This APK still has no trained checkpoint or integrated inference runtime.", 13f, muted))
-        body.addView(c)
+        OpenRouterChatPanel.render(this, body)
+        val local = card()
+        local.addView(text("LOCAL MODEL STATUS", 12f, accent, true))
+        local.addView(text("Original LLM abhi research/training stage mein hai; OpenRouter chat cloud API se chalta hai aur local model ka replacement nahi hai.", 13f, muted))
+        body.addView(local)
     }
 
     private fun trainPage() {
