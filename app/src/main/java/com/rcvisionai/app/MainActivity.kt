@@ -314,7 +314,7 @@ class MainActivity : Activity() {
 
         val about = card()
         about.addView(text("ABOUT RC VISION AI", 12f, accent, true))
-        about.addView(text("Independent project. No third-party AI APIs, no bundled pretrained model, and no external AI engine.", 14f, Color.WHITE))
+        about.addView(text("Independent project. OpenRouter can power online chat when configured. The original local LLM and rendering engines remain research prototypes.", 14f, Color.WHITE))
         about.addView(text("Version 0.1.0 • Runtime foundation only", 12f, muted))
         body.addView(about)
     }
