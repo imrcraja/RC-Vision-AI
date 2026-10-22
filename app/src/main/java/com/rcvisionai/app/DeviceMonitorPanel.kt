@@ -31,7 +31,8 @@ internal object DeviceMonitorPanel {
             text = "Refresh metrics"; isAllCaps = false
             setOnClickListener { output.text = readMetrics(activity) }
         }
-        val fps = Button(activity).apply {
+        lateinit var fps: Button
+        fps = Button(activity).apply {
             text = "Estimate UI FPS"; isAllCaps = false
             setOnClickListener {
                 fps.text = "Measuring…"
