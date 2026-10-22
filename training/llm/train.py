@@ -99,6 +99,7 @@ def main() -> int:
     parser.add_argument("--learning-rate", type=float, default=3e-4)
     parser.add_argument("--seed", type=int, default=20261022)
     parser.add_argument("--checkpoint-every", type=int, default=100)
+    parser.add_argument("--resume", type=Path, default=None, help="Resume model and optimizer from a compatible checkpoint")
     args = parser.parse_args()
     if min(args.steps, args.batch_size, args.context, args.width, args.layers, args.heads, args.checkpoint_every) < 1:
         parser.error("steps, batch-size, context, width, layers, heads and checkpoint-every must be positive")
@@ -113,12 +114,28 @@ def main() -> int:
     if len(val_data) <= args.context + 1: raise ValueError("Corpus needs a larger held-out validation section; add more text.")
     model = RCVisionLM(args.width, args.layers, args.heads, args.context).to(device)
     optimizer = torch.optim.AdamW(model.parameters(), lr=args.learning_rate)
+    start_step = 0
+    if args.resume is not None:
+        if not args.resume.is_file():
+            raise FileNotFoundError(f"Resume checkpoint not found: {args.resume}")
+        checkpoint = torch.load(args.resume, map_location=device, weights_only=False)
+        expected = {"width": args.width, "layers": args.layers, "heads": args.heads, "context": args.context, "vocab_size": 256}
+        if checkpoint.get("model_config") != expected:
+            raise ValueError(f"Checkpoint config mismatch: expected {expected}, got {checkpoint.get('model_config')}")
+        model.load_state_dict(checkpoint["model_state"])
+        if "optimizer_state" in checkpoint:
+            optimizer.load_state_dict(checkpoint["optimizer_state"])
+        start_step = int(checkpoint.get("step", 0))
+        print(f"Resuming from checkpoint step {start_step}: {args.resume}")
     args.output.mkdir(parents=True, exist_ok=True)
     corpus_hash = hashlib.sha256(args.corpus.read_bytes()).hexdigest()
     started = time.time(); last_loss = float("nan")
     print(f"Device: {device}; corpus bytes: {len(data)}; train: {len(train_data)}; validation: {len(val_data)}")
-    print("Training from random initialization. No pretrained weights are loaded.")
-    for step in range(1, args.steps + 1):
+    if start_step == 0:
+        print("Training from random initialization. No pretrained weights are loaded.")
+    else:
+        print("Continuing from this project's own checkpoint; no pretrained weights are loaded.")
+    for step in range(start_step + 1, start_step + args.steps + 1):
         model.train(); x, y = batches(train_data, args.batch_size, args.context, device)
         logits = model(x); loss = F.cross_entropy(logits.reshape(-1, 256), y.reshape(-1))
         optimizer.zero_grad(set_to_none=True); loss.backward()
@@ -138,7 +155,7 @@ def main() -> int:
             target = args.output / f"checkpoint-{step:07d}.pt"; torch.save(checkpoint, target)
             metadata = {k:v for k,v in checkpoint.items() if k not in {"model_state","optimizer_state"}}
             (args.output / "latest.json").write_text(json.dumps(metadata, indent=2), encoding="utf-8")
-            print(f"step={step}/{args.steps} train_loss={last_loss:.4f} validation_loss={val_loss:.4f} checkpoint={target}")
+            print(f"step={step} train_loss={last_loss:.4f} validation_loss={val_loss:.4f} checkpoint={target}")
     print("Finished. Loss is a research metric, not proof of useful conversational ability.")
     return 0
 
