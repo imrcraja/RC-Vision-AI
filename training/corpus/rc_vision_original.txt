@@ -1,0 +1,39 @@
+RC Vision AI original training corpus
+Project: RC Vision AI
+Purpose: study a small language model trained from random initialization.
+Creator: RC RAJA GAMER 2.0.
+This corpus is an original, small educational corpus written for this repository. It is not a large general knowledge dataset and it cannot teach a model broad intelligence. The text describes the project, software engineering, safe data practice, and simple learning concepts.
+
+A language model predicts the next token from earlier tokens. Training compares the model's next-token probabilities with the actual next token. The loss is a measurement of prediction error on the chosen data. A lower training loss does not prove that a model is truthful, helpful, safe, or intelligent. Validation data should be held out from training. A test set should remain untouched until evaluation.
+
+A dataset should have a known source, documented permission, stable identifiers, and a cryptographic hash. Do not include private conversations, passwords, authentication tokens, private photographs, or personal records without appropriate permission. Do not assume that text available on the internet is automatically licensed for reuse. Keep a manifest for each dataset. Record its creator, license, collection date, language, content description, and SHA-256 digest. Remove duplicates and malformed records before training.
+
+The RC Vision AI Android application is local-first. The starter app has no Internet permission and does not call a remote AI service. A saved prompt is not an image. A model status message is not a generated result. The interface should clearly distinguish a completed operation from a planned feature. It must never invent progress percentages or pretend that an untrained model is ready.
+
+A training run should record its seed, model configuration, dataset hash, optimizer settings, number of steps, elapsed time, training loss, and validation loss. Checkpoints should be saved atomically when possible. If a run is interrupted, resume only from a compatible checkpoint. Never load arbitrary checkpoint files from untrusted sources. Model files can be large and may contain executable serialization formats, so use a safe and documented process.
+
+An original Transformer can be initialized with random parameters. The token embedding maps token identifiers to vectors. Position embeddings provide information about order. Causal attention lets a token use earlier tokens without looking into the future. A feed-forward network transforms each token representation. Residual connections and normalization can make optimization more stable. The output layer predicts the next token distribution. Training adjusts the parameters using gradients from the next-token loss.
+
+A byte tokenizer represents UTF-8 text as byte values from zero through two hundred fifty-five. It is easy to implement and reversible, but it is inefficient for language. A common word may occupy many byte tokens, so a byte model needs more sequence positions and training compute than a well-designed subword tokenizer. This small experiment chooses simplicity and transparency over efficiency.
+
+A validation loss should be measured on data not used to update model parameters. Randomly sampling validation batches is useful for a quick prototype, but stable comparisons require a fixed evaluation set. A single tiny corpus can cause memorization. Repeating a paragraph does not create new knowledge. The training report should state the actual data size and should not describe a toy model as a full assistant.
+
+The application should protect battery life and device temperature. A mobile device has limited memory, compute throughput, and thermal headroom. Large matrix operations can cause heat and slowdowns. Heavy tasks should run sequentially rather than all at once. The interface should allow a task to be stopped, preserve checkpoints, and show measured progress. A user should be told when a workload needs a more capable computer.
+
+Image generation is a different model-development problem from text generation. A prompt-conditioned image model needs image-text pairs with suitable rights and an architecture trained to connect text conditions to visual patterns. A random noise image or a gradient background is not a generated semantic image. A tiny autoencoder can reconstruct pixels but does not automatically understand prompts. Image generation must remain marked unavailable until a real conditional model is trained and evaluated.
+
+When evaluating a model, use examples that were not copied into the training corpus. Record the prompt, expected properties, actual output, model checkpoint, and limitations. Test whether the output is coherent and whether it follows the prompt. Check for memorization and sensitive-data reproduction. A small model may produce random-looking text; that is a valid research result and must be reported honestly.
+
+Software quality depends on repeatable tests. Validate input paths, reject path traversal, handle missing files, and provide useful errors. Tests should cover both expected and invalid input. Build automation should run on a clean environment and publish artifacts only after a successful build. A passing syntax check does not prove that a model is useful, and a successful APK build does not mean the AI engine is complete.
+
+A good learning project starts with a narrow goal. First verify that the code runs. Then inspect data and model dimensions. Next train for a small number of steps and confirm that the loss is finite. Compare training and validation metrics. Save the checkpoint and test loading it. Only then increase the model size or training duration. Change one major setting at a time so results can be understood.
+
+The project is designed to avoid pretrained AI models and third-party inference engines. A tensor library may be used for arithmetic and automatic differentiation; this does not make the learned weights pretrained. All model parameters in this experiment begin from random initialization. The final trained parameters are artifacts created by the training process.
+
+A small model trained for a few minutes on a small corpus will not become a competitive conversational assistant. The purpose of this first training run is to verify the full path from licensed text to random initialization, optimization, checkpoint, and measured validation loss. A real assistant needs a much larger carefully curated corpus, compute, evaluation, and safety work.
+
+For every model checkpoint, preserve the configuration and corpus hash. If the dataset changes, it is a different training run. If the model architecture changes, the checkpoint may no longer be compatible. Avoid publishing large checkpoints in Git history; use workflow artifacts or an explicitly managed model release. Review the contents before sharing.
+
+Privacy matters even in a local app. Store only what the user expects. Give users a clear way to clear prompts. Do not upload private images or text without a separate, explicit action. A future export archive should list every file and hash, validate paths on import, and avoid executing contents. User data and model weights should not be mixed with application secrets.
+
+The goal is a transparent research foundation. It is better to show an unfinished feature honestly than to simulate an AI result. Each milestone should be independently tested, measurable, and understandable. The current model is a tiny experiment, not a finished product.
