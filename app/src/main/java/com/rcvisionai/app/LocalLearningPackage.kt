@@ -68,5 +68,5 @@ object LocalLearningPackage {
         (json.toString(2) + "\n").toByteArray(Charsets.UTF_8)
 
     private fun sha256(bytes: ByteArray): String =
-        MessageDigest.getInstance("SHA-256").digest(bytes).joinToString("") { "%02x".format(it) }
+        MessageDigest.getInstance("SHA-256").digest(bytes).joinToString("") { "%02x".format(it.toInt() and 0xff) }
 }
