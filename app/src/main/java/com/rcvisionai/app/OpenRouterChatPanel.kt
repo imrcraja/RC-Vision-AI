@@ -37,7 +37,7 @@ internal object OpenRouterChatPanel {
             setOnClickListener {
                 val value = key.text.toString().trim()
                 if (!value.startsWith("sk-or-")) {
-                    addLine(activity, transcriptPlaceholder(activity), "Status", "OpenRouter key format check karo.")
+                    android.widget.Toast.makeText(activity, "OpenRouter key format check karo.", android.widget.Toast.LENGTH_SHORT).show()
                 } else {
                     try {
                         ApiKeyVault.save(activity, value)
@@ -106,7 +106,7 @@ internal object OpenRouterChatPanel {
         host.addView(label(activity, "Note: yeh API chat hai. Is build mein abhi isolated code sandbox / tool execution connected nahi hai.", 12f, muted, false))
     }
 
-    private fun transcriptPlaceholder(activity: Activity) = LinearLayout(activity).apply { orientation = LinearLayout.VERTICAL }\n\n    private fun request(token: String, model: String, messages: JSONArray): Pair<String?, String?> {
+    private fun request(token: String, model: String, messages: JSONArray): Pair<String?, String?> {
         var conn: HttpURLConnection? = null
         return try {
             conn = (URL(ENDPOINT).openConnection() as HttpURLConnection).apply {
