@@ -38,18 +38,18 @@ jobs:
           python training/llm/train.py
           --corpus training/corpus/rc_vision_original.txt
           --output artifacts/llm
-          --steps 80
+          --steps 500
           --batch-size 4
           --context 64
           --width 64
           --layers 2
           --heads 2
-          --checkpoint-every 20
+          --checkpoint-every 100
           --seed 20261022
       - name: Smoke-test local sampling from the trained checkpoint
         run: >-
           python training/llm/generate.py
-          --checkpoint artifacts/llm/checkpoint-0000080.pt
+          --checkpoint artifacts/llm/checkpoint-0000500.pt
           --prompt "RC Vision AI is"
           --new-bytes 96
           --seed 7
