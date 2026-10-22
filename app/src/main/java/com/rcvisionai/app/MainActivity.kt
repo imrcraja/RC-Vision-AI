@@ -292,7 +292,7 @@ class MainActivity : Activity() {
         body.addView(text("Settings & privacy", 25f, Color.WHITE, true))
         val c = card()
         c.addView(text("LOCAL DATA", 12f, accent, true))
-        c.addView(text("This starter app has no Internet permission and makes no network requests. Saved prompts stay in app-private storage.", 14f, muted))
+        c.addView(text("Saved prompts stay in app-private storage. OpenRouter chat uses Internet only when you send a request; saved API keys are encrypted with Android Keystore.", 14f, muted))
         c.addView(button("Clear saved prompts") {
             workspace.clearPrompts()
             Toast.makeText(this, "Saved prompts cleared.", Toast.LENGTH_SHORT).show()
@@ -300,6 +300,7 @@ class MainActivity : Activity() {
         }, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(48)).apply {
             topMargin = dp(14)
         })
+        DeviceMonitorPanel.render(this, c)
         body.addView(c)
 
         val export = card()
