@@ -41,8 +41,9 @@ jobs:
 
       - name: Run ZIP packaging tests and syntax checks
         run: |
-          python -m py_compile training/llm/train.py training/llm/generate.py training/llm/gemini_corpus.py training/image/train_autoencoder.py training/image/train_diffusion.py training/image/generate_image.py training/image/model.py training/package_daily_learning.py
+          python -m py_compile training/llm/train.py training/llm/generate.py training/llm/gemini_corpus.py training/image/train_autoencoder.py training/image/train_diffusion.py training/image/generate_image.py training/image/model.py training/image/test_research.py training/package_daily_learning.py
           python -m unittest discover -s tests -p 'test_daily_package.py' -v
+          PYTHONPATH=training/image python -m unittest discover -s training/image -p 'test_research.py' -v
 
       - name: Restore best-effort prior LLM checkpoint cache
         uses: actions/cache/restore@v4
@@ -112,6 +113,18 @@ jobs:
             fi
           fi
 
+      - name: Smoke-test conditional image sampling when a checkpoint exists
+        shell: bash
+        run: |
+          if [ -f artifacts/image/conditional-diffusion.pt ]; then
+            PYTHONPATH=training/image python training/image/generate_image.py \
+              --checkpoint artifacts/image/conditional-diffusion.pt \
+              --prompt "a simple original research sample" \
+              --output artifacts/image/sample.png
+          else
+            echo "No conditional diffusion checkpoint exists yet; no prompt-based image sample is claimed."
+          fi
+
       - name: Save best-effort LLM checkpoint cache
         uses: actions/cache/save@v4
         with:
@@ -133,6 +146,6 @@ jobs:
           path: |
             artifacts/rc-vision-ai-daily-learning.zip
             artifacts/llm/latest.json
-            artifacts/image/metrics.json
+            artifacts/image/*metrics.json
           if-no-files-found: warn
           retention-days: 14
