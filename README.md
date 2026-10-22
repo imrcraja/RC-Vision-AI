@@ -12,7 +12,7 @@
 ## Current status
 The repository contains an original, randomly initialized, byte-level decoder-only Transformer trainer (training/llm/train.py) and text sampler (training/llm/generate.py). It is an early research prototype, not yet a capable general-purpose assistant. The daily GitHub Actions workflow trains from the project-owned seed corpus and may resume a cached checkpoint. No third-party model is used to answer prompts or generate the training corpus.
 
-The Android app has a native UI shell, local prompt saving/export, device telemetry, and an opt-in authenticated LAN API server prototype (port 8765). The API server exposes health/model status and deliberately returns 503 for chat until local inference is integrated. Read docs/DEVICE_API.md before enabling it. The Chat tab is a local-only research console. **Android inference is not integrated yet**, and no trained checkpoint is bundled in the APK. It reports this honestly rather than silently calling an external API. The original image model is a separate research pipeline and cannot produce useful prompt-based images until a suitable permitted dataset is added and the model is trained/evaluated.
+The Android app has a native UI shell, local prompt saving/export, device telemetry, and an opt-in authenticated LAN API server prototype (port 8765). That Android server still returns 503 for chat until an Android runtime is integrated. Separately, training/llm/serve.py now provides a self-hosted Python API for a checkpoint trained by this repository, with bearer-token authentication and bounded requests; it requires a supported Python/PyTorch environment and is not bundled in the APK. Read docs/DEVICE_API.md and docs/SELF_HOSTED_INFERENCE.md before enabling either server. The Chat tab is a local-only research console. **Android inference is not integrated yet**, and no trained checkpoint is bundled in the APK. It reports this honestly rather than silently calling an external API. The original image model is a separate research pipeline and cannot produce useful prompt-based images until a suitable permitted dataset is added and the model is trained/evaluated.
 
 ## Run research training
 Requires Python 3.10+. Install training/llm/requirements.txt, then run:
@@ -24,6 +24,9 @@ python training/llm/generate.py --checkpoint artifacts/llm/checkpoint-500.pt --p
 ```
 
 Checkpoint filenames depend on configured step/checkpoint intervals. Inspect artifacts/llm/latest.json and validation metrics; falling loss does not prove useful assistant behaviour.
+
+## Self-hosted local inference API
+The repository includes a small API server that loads an original RC Vision AI checkpoint and serves `/health`, `/v1/models`, and `/v1/chat/completions` without calling any hosted LLM. See [docs/SELF_HOSTED_INFERENCE.md](docs/SELF_HOSTED_INFERENCE.md). This runs in a Python/PyTorch environment; it does **not** mean Android inference is already integrated.
 
 ## Android app
 The native Kotlin app is under app/. It includes Create, Chat, Train and Settings screens, local prompt storage, ZIP export, and on-demand RAM/battery-temperature/thermal/UI-frame estimates. Android inference and sandboxed code execution are future work. See docs/ANDROID_BUILD.md and docs/MODEL_DESIGN.md.
@@ -39,7 +42,7 @@ The native Kotlin app is under app/. It includes Create, Chat, Train and Setting
 The future model-size targets are goals, not currently available capabilities. GitHub Actions is a bounded scheduled/manual job, not a permanent server or a guarantee of continuous training.
 
 ## Privacy
-Never commit API keys, secrets, private images or personal datasets. The current local app does not transmit prompts to a server.
+Never commit API keys, secrets, private images or personal datasets. The Android local research console does not transmit prompts to a server. The optional Android LAN API and Python self-hosted API only handle requests when you explicitly start those services; protect their tokens and do not expose plain HTTP to the public internet.
 
 ## License
 No license has been selected. Normal copyright applies until a license is added.
