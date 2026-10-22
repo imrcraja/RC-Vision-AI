@@ -22,8 +22,9 @@ This roadmap intentionally separates a working runtime from the much harder task
 
 ## Milestone 2 — Local workspace
 
-- [ ] Versioned local settings and prompt history
-- [ ] Explicit clear/export controls
+- [x] Device-local prompt history with save, reuse, and clear controls (starter)
+- [ ] Versioned local settings and prompt export
+- [ ] Explicit workspace export/import controls
 - [ ] Reference-image metadata (files remain local)
 - [ ] Real task event log and cancellation
 
@@ -44,11 +45,14 @@ This roadmap intentionally separates a working runtime from the much harder task
 
 ## Milestone 5 — User experience and packaging
 
-- [ ] Mobile-friendly UI with accessibility support
+- [x] Native Android app shell with Create, Chat, Train, and Settings screens
+- [x] Liquid-glass-inspired panels and entrance transitions (initial pass; true background blur and reduced-motion settings remain)
+- [x] Android debug APK CI workflow added
+- [ ] Verify APK CI build and install on a real device
+- [ ] Accessibility, screen-reader, and reduced-motion support
 - [ ] Real inference-step progress, not guessed percentages
 - [ ] Thermal/resource-aware pauses with user-visible reasons
 - [ ] ZIP export with manifest, checksums, version compatibility, and safe import
-- [ ] Build and test an installable package
 
 ## Practical constraint
 
