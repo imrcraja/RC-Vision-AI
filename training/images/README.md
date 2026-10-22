@@ -1,7 +1,20 @@
 # Image research dataset
 
-Place at least two images you own or have explicit permission to use under this directory to enable the optional daily image-reconstruction experiment. Supported formats: PNG, JPG/JPEG, WebP, BMP. Keep private images out of the public repository.
+Keep only images you own or have explicit permission to use under this directory. Supported formats: PNG, JPG/JPEG, WebP, BMP. Avoid private images in this public repository.
 
-The initial `training/image/train_autoencoder.py` implementation trains a tiny convolutional autoencoder from random initialization to reconstruct 64×64 RGB images. It is deliberately **not** described as a prompt-conditioned image generator: it has no text encoder, no prompt/image alignment objective, and no semantic generation guarantee. The workflow skips image training when fewer than two images are present.
+## Preferred: prompt-conditioned image research
 
-Before adding a real dataset, document source, creator, permission/license, collection date, and a content hash. Never add secrets or private photos without consent. Dataset images committed to a public repository may become publicly accessible.
+For original conditional diffusion training, add at least two image/caption pairs to `captions.jsonl`:
+
+```json
+{"image":"example1.png","caption":"a red square on a plain background"}
+{"image":"example2.png","caption":"a blue circle on a plain background"}
+```
+
+Each image path must stay inside this directory. The daily workflow uses `training/image/train_diffusion.py` when this manifest has at least two caption rows. It trains an original byte-level text encoder and denoiser from random initialization and then smoke-tests sampling. This is a tiny research experiment; a small dataset will not produce a capable image generator.
+
+## Fallback: image reconstruction
+
+If there are at least two images but no usable caption manifest, the workflow trains `training/image/train_autoencoder.py` to reconstruct 64×64 RGB images. Reconstruction is not prompt-based image generation.
+
+Document source, creator, permission/license, collection date, and content hashes for real datasets. Never commit secrets or private photos without consent.

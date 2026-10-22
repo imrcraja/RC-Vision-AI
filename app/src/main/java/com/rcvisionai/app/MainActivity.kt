@@ -7,6 +7,7 @@ import android.animation.AnimatorSet
 import android.animation.ObjectAnimator
 import android.graphics.drawable.RippleDrawable
 import android.content.res.ColorStateList
+import android.content.Intent
 import android.view.animation.DecelerateInterpolator
 import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
@@ -29,6 +30,7 @@ class MainActivity : Activity() {
     private lateinit var body: LinearLayout
     private lateinit var workspace: LocalWorkspace
     private var currentTab = "Create"
+    private val exportRequestCode = 4201
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,6 +39,32 @@ class MainActivity : Activity() {
         window.navigationBarColor = bg
         window.decorView.systemUiVisibility = 0
         showScreen("Create")
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode != exportRequestCode || resultCode != RESULT_OK) return
+        val uri = data?.data ?: return
+        try {
+            val stream = contentResolver.openOutputStream(uri)
+            if (stream == null) {
+                Toast.makeText(this, "ZIP file open nahi ho saki.", Toast.LENGTH_LONG).show()
+                return
+            }
+            LocalLearningPackage.writeZip(stream, workspace.getPrompts())
+            Toast.makeText(this, "Local learning ZIP export ho gaya.", Toast.LENGTH_LONG).show()
+        } catch (error: Exception) {
+            Toast.makeText(this, "Export fail hua: ${error.message ?: "unknown error"}", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    private fun requestLearningExport() {
+        val intent = Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
+            addCategory(Intent.CATEGORY_OPENABLE)
+            type = "application/zip"
+            putExtra(Intent.EXTRA_TITLE, "RC-Vision-AI-Learning.zip")
+        }
+        startActivityForResult(intent, exportRequestCode)
     }
 
     private fun dp(value: Int): Int = (value * resources.displayMetrics.density).toInt()
@@ -274,6 +302,16 @@ class MainActivity : Activity() {
             topMargin = dp(14)
         })
         body.addView(c)
+
+        val export = card()
+        export.addView(text("LEARNING EXPORT", 12f, accent, true))
+        export.addView(text("Export saved prompts and learning metadata as a ZIP that you can upload for review. This starter export does not contain trained model weights or inferred memories.", 14f, muted))
+        export.addView(button("Export local learning ZIP") {
+            requestLearningExport()
+        }, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(48)).apply {
+            topMargin = dp(12)
+        })
+        body.addView(export)
 
         val about = card()
         about.addView(text("ABOUT RC VISION AI", 12f, accent, true))

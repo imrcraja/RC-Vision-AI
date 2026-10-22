@@ -21,8 +21,9 @@ The first goal is a small image model trained from random initialization on a ca
 Candidate research path:
 - image loader and dataset manifest with provenance/permission metadata
 - fixed-size image normalization and train/validation split
-- compact convolutional autoencoder as an initial experiment
-- later investigate a small conditional generative model trained from scratch
+- compact convolutional autoencoder as a reconstruction baseline
+- a tiny conditional diffusion denoiser and original byte-level text encoder, trained jointly from scratch on permission-cleared image/caption pairs
+- a reverse diffusion sampling script for low-resolution prompts; quality remains unverified until a suitable dataset is trained and evaluated
 - save and validate checkpoints with explicit schema and checksums
 - measure reconstruction/generation quality, memory use, speed, and thermal behavior
 
