@@ -34,10 +34,10 @@ internal object DeviceMonitorPanel {
         val fps = Button(activity).apply {
             text = "Estimate UI FPS"; isAllCaps = false
             setOnClickListener {
-                text = "Measuring…"
+                fps.text = "Measuring…"
                 estimateUiFps(activity) { value ->
                     output.text = readMetrics(activity) + "\nUI frame estimate: $value FPS (short sample; not game/render FPS)"
-                    text = "Estimate UI FPS"
+                    fps.text = "Estimate UI FPS"
                 }
             }
         }
