@@ -35,6 +35,7 @@ class MainActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         workspace = LocalWorkspace(this)
+        DailyLearningScheduler.schedule(this)
         window.statusBarColor = bg
         window.navigationBarColor = bg
         window.decorView.systemUiVisibility = 0
@@ -305,7 +306,7 @@ class MainActivity : Activity() {
 
         val export = card()
         export.addView(text("LEARNING EXPORT", 12f, accent, true))
-        export.addView(text("Export saved prompts and learning metadata as a ZIP that you can upload for review. This starter export does not contain trained model weights or inferred memories.", 14f, muted))
+        export.addView(text("A best-effort daily job saves a ZIP in app-private storage after you first open the app. Export saved prompts and empty learning templates to a chosen location for review. No trained model weights or inferred memories are included yet.", 14f, muted))
         export.addView(button("Export local learning ZIP") {
             requestLearningExport()
         }, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(48)).apply {
