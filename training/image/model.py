@@ -66,6 +66,7 @@ class RCConditionalDenoiser(nn.Module):
         ])
         self.output_norm = nn.GroupNorm(8 if width % 8 == 0 else 1, width)
         self.output = nn.Conv2d(width, image_channels, 3, padding=1)
+        self.activation = nn.SiLU()
         self.condition_mix = nn.Linear(condition_width, condition_width)
 
     def forward(
@@ -84,4 +85,4 @@ class RCConditionalDenoiser(nn.Module):
         x = self.input(noisy_image)
         for block in self.blocks:
             x = block(x, condition)
-        return self.output(self.activation(self.output_norm(x))) if hasattr(self, "activation") else self.output(torch.nn.functional.silu(self.output_norm(x)))
+        return self.output(self.activation(self.output_norm(x)))
