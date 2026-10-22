@@ -27,7 +27,7 @@ internal object ModelApiServer {
         if (!saved.isNullOrBlank()) return saved
         val bytes = ByteArray(32)
         SecureRandom().nextBytes(bytes)
-        val created = bytes.joinToString("") { "%02x".format(it) }
+        val created = bytes.joinToString("") { "%02x".format(it.toInt() and 0xff) }
         prefs.edit().putString("bearer_token", created).apply()
         return created
     }
