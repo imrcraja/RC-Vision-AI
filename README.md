@@ -34,7 +34,7 @@ Run from the repository root. These commands use the Python standard library at 
 
 The native Kotlin Android module is in `app/`. It has animated liquid-glass-inspired panels, screen entrance transitions, and local prompt saving. It uses Android platform APIs directly and declares no Internet permission. Build requirements are in [`docs/ANDROID_BUILD.md`](docs/ANDROID_BUILD.md). GitHub Actions is configured to build a debug APK and upload it as a 14-day artifact when the workflow succeeds; verify the run before treating the APK as available.
 
-Model research for the original LLM and image generator is documented in [`docs/MODEL_DESIGN.md`](docs/MODEL_DESIGN.md). The optional Gemini-assisted training workflow and its limits are described in [`docs/GEMINI_TRAINING.md`](docs/GEMINI_TRAINING.md).
+Model research for the original LLM and image pipeline is documented in [`docs/MODEL_DESIGN.md`](docs/MODEL_DESIGN.md). The optional Gemini-assisted training workflow and its limits are described in [`docs/GEMINI_TRAINING.md`](docs/GEMINI_TRAINING.md). A scheduled hybrid workflow now builds a versioned daily learning ZIP via [`training/package_daily_learning.py`](training/package_daily_learning.py). The image experiment in [`training/image/train_autoencoder.py`](training/image/train_autoencoder.py) is a reconstruction baseline only, not a prompt-conditioned image generator. See [`training/images/README.md`](training/images/README.md) before adding a permitted dataset.
 
 ## Planned milestones
 
@@ -44,7 +44,8 @@ Model research for the original LLM and image generator is documented in [`docs/
 4. **Original model research:** document architecture decisions and implement components in-house.
 5. **Training and evaluation:** reproducible configs, checkpoints, honest metrics, safety checks.
 6. **Image generation UI:** prompt input, reference-image workflow, task progress and output gallery once a trained model is usable.
-7. **Export/import:** versioned ZIP packages for project settings and compatible training artifacts; verify manifests before import.
+7. **Daily learning export:** a GitHub Actions workflow can package its own checkpoints, metrics, seed/generated corpus, and empty memory/knowledge/skills/evaluation templates into a versioned ZIP. Phone-local state is not yet connected to this export.
+8. **Android integration:** implement local model runtime, background-safe training, and explicit phone ZIP export/import. This remains future work.
 
 ## Safety and privacy
 
