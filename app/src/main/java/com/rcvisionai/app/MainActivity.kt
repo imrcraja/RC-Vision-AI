@@ -3,6 +3,11 @@ package com.rcvisionai.app
 import android.app.Activity
 import android.graphics.Color
 import android.graphics.Typeface
+import android.animation.AnimatorSet
+import android.animation.ObjectAnimator
+import android.graphics.drawable.RippleDrawable
+import android.content.res.ColorStateList
+import android.view.animation.DecelerateInterpolator
 import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.view.Gravity
@@ -42,6 +47,31 @@ class MainActivity : Activity() {
             cornerRadius = dp(radius).toFloat()
         }
 
+    /** Lightweight liquid-glass-inspired surface: translucent gradient, cool edge and soft highlight. */
+    private fun glassSurface(): GradientDrawable =
+        GradientDrawable(
+            GradientDrawable.Orientation.TL_BR,
+            intArrayOf(Color.rgb(38, 48, 68), Color.rgb(23, 29, 43), Color.rgb(18, 23, 35))
+        ).apply {
+            cornerRadius = dp(22).toFloat()
+            setStroke(dp(1), Color.argb(105, 167, 196, 255))
+        }
+
+    private fun animateIn(view: View, delay: Long = 0L) {
+        view.alpha = 0f
+        view.translationY = dp(12).toFloat()
+        AnimatorSet().apply {
+            playTogether(
+                ObjectAnimator.ofFloat(view, View.ALPHA, 0f, 1f),
+                ObjectAnimator.ofFloat(view, View.TRANSLATION_Y, dp(12).toFloat(), 0f)
+            )
+            duration = 320
+            startDelay = delay
+            interpolator = DecelerateInterpolator()
+            start()
+        }
+    }
+
     private fun text(value: String, size: Float, color: Int = Color.WHITE, bold: Boolean = false): TextView =
         TextView(this).apply {
             text = value
@@ -57,7 +87,8 @@ class MainActivity : Activity() {
             isAllCaps = false
             textSize = 14f
             setTextColor(Color.WHITE)
-            background = rounded(accent, 14)
+            background = RippleDrawable(ColorStateList.valueOf(Color.argb(55, 255, 255, 255)), rounded(accent, 14), rounded(Color.WHITE, 14))
+            elevation = dp(2).toFloat()
             setPadding(dp(12), dp(5), dp(12), dp(5))
             setOnClickListener { action() }
         }
@@ -65,7 +96,8 @@ class MainActivity : Activity() {
     private fun card(): LinearLayout = LinearLayout(this).apply {
         orientation = LinearLayout.VERTICAL
         setPadding(dp(16), dp(15), dp(16), dp(15))
-        background = rounded(panel)
+        background = glassSurface()
+        elevation = dp(3).toFloat()
         layoutParams = LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
         ).apply { bottomMargin = dp(12) }
@@ -75,7 +107,10 @@ class MainActivity : Activity() {
         currentTab = tab
         root = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setBackgroundColor(bg)
+            background = GradientDrawable(
+                GradientDrawable.Orientation.TL_BR,
+                intArrayOf(Color.rgb(10, 15, 28), Color.rgb(17, 22, 35), Color.rgb(10, 13, 22))
+            )
             setPadding(dp(18), dp(14), dp(18), dp(8))
         }
         setContentView(root)
@@ -105,6 +140,7 @@ class MainActivity : Activity() {
             "Train" -> trainPage()
             else -> settingsPage()
         }
+        for (i in 0 until body.childCount) animateIn(body.getChildAt(i), (i * 55L).coerceAtMost(220L))
 
         val nav = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
@@ -118,6 +154,7 @@ class MainActivity : Activity() {
                 gravity = Gravity.CENTER
                 setTextColor(if (name == tab) Color.WHITE else muted)
                 setPadding(dp(7), dp(12), dp(7), dp(12))
+                if (name == tab) background = rounded(Color.rgb(41, 61, 96), 16)
                 setOnClickListener { showScreen(name) }
             }
             nav.addView(item, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
