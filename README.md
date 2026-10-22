@@ -32,7 +32,7 @@ Run from the repository root. These commands use the Python standard library at 
 
 ## Android app
 
-The native Kotlin Android module is in `app/`. It uses Android platform APIs directly and declares no Internet permission. Build requirements and instructions are in [`docs/ANDROID_BUILD.md`](docs/ANDROID_BUILD.md). The app source has been committed, but an APK build has not yet been verified.
+The native Kotlin Android module is in `app/`. It has animated liquid-glass-inspired panels, screen entrance transitions, and local prompt saving. It uses Android platform APIs directly and declares no Internet permission. Build requirements are in [`docs/ANDROID_BUILD.md`](docs/ANDROID_BUILD.md). GitHub Actions is configured to build a debug APK and upload it as a 14-day artifact when the workflow succeeds; verify the run before treating the APK as available.
 
 Model research for the original LLM and image generator is documented in [`docs/MODEL_DESIGN.md`](docs/MODEL_DESIGN.md).
 
