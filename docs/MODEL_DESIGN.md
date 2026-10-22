@@ -1,6 +1,6 @@
 # Original model design plan
 
-This document defines the research path for two separate model families. No pretrained weights, borrowed open-source AI engine, or third-party inference API is included in this repository.
+This document defines the research path for two separate model families. No pretrained weights or borrowed open-source AI engine is included. An optional Gemini API workflow may generate synthetic text for training, but Gemini is not the app's inference engine and does not provide the model weights.
 
 ## 1. Language model (LLM)
 
@@ -29,7 +29,7 @@ Candidate research path:
 ## 3. Android constraints
 
 - The APK is a native Kotlin app using Android platform APIs, without AndroidX or third-party runtime libraries in this starter.
-- The app currently includes no Internet permission and performs no network calls.
+- The app currently includes no Internet permission and performs no network calls. Gemini API credentials are used only by the GitHub Actions training workflow and must never be embedded in the APK.
 - A trained image model plus an LLM may be too large or slow for many phones. We must benchmark the actual target device before choosing quantization, model size, or training features.
 - Android's app UI and the model runtime should be separated. Heavy tasks run off the UI thread and must be cancellable.
 - Training directly on a phone is a later experiment, not a promise of unlimited compute.
@@ -39,4 +39,6 @@ Candidate research path:
 - Never label a random or untrained network as a functioning image generator or assistant.
 - Never show invented progress percentages. Use measured steps, batches, or explicit stage states.
 - Never silently download or execute model code.
+- Gemini-generated text is untrusted training data: review/evaluate it, do not execute it as code.
+- The local training engine is a separate project component; GitHub Actions does not run forever and Android background work is subject to OS limits.
 - Any future optional dependencies must be reviewed and disclosed; no third-party AI model or inference API may be introduced.
