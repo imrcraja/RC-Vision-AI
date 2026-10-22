@@ -70,7 +70,7 @@ def main() -> int:
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--topics", type=int, default=2)
     parser.add_argument("--max-output-tokens", type=int, default=1000)
-    parser.add_argument("--model", default=os.environ.get("OPENROUTER_MODEL", "openrouter/auto"))
+    parser.add_argument("--model", default=(os.environ.get("OPENROUTER_MODEL", "").strip() or "openrouter/auto"))
     args = parser.parse_args()
     key = os.environ.get("OPENROUTER_API_KEY", "").strip()
     if not key:
