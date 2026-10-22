@@ -7,7 +7,7 @@ This folder implements a small decoder-only Transformer from random initializati
 - It is a first, small language-model training experiment.
 - It is not a trained general assistant, and its output may be incoherent.
 - A UTF-8 byte vocabulary (256 symbols) is intentionally simple and inefficient.
-- The corpus must be supplied by you and must be content you have permission to use.
+- The corpus may be supplied by you and must be content you have permission to use. The included `training/corpus/rc_vision_original.txt` is a small original educational corpus for smoke testing only.
 - Training does not happen inside the Android APK yet.
 - No usage quota is coded into the trainer, but compute, RAM, disk, heat, and training time are real physical constraints.
 
@@ -20,11 +20,17 @@ python -m pip install -r training/llm/requirements.txt
 python training/llm/train.py --corpus /path/to/permission-cleared-corpus.txt --steps 1000
 ```
 
-The corpus should be UTF-8 plain text and at least a few thousand bytes for a useful experiment. Checkpoints and `latest.json` are written under `artifacts/llm/`. Keep generated artifacts out of Git unless intentionally sharing a small, safe research checkpoint.
+The corpus should be UTF-8 plain text and at least a few thousand bytes for a useful experiment. A tiny original project corpus and a low-budget GitHub Actions training workflow are included as a pipeline smoke test; this is not enough data or compute to create a capable assistant. Checkpoints and `latest.json` are written under `artifacts/llm/`. Keep generated artifacts out of Git unless intentionally sharing a small, safe research checkpoint.
+
+Sample from a checkpoint you trust:
+
+```bash
+python training/llm/generate.py --checkpoint artifacts/llm/checkpoint-0000080.pt --prompt "RC Vision AI" --new-bytes 160
+```
 
 ## Reproducibility and honest evaluation
 
-The script fixes random seeds, hashes the corpus, saves model configuration and optimizer state, reports measured training/validation cross-entropy, and periodically writes checkpoints. Validation is a random batch from a held-out suffix; for serious research, add a stable evaluation suite and document corpus provenance, splits, deduplication, and licensing. A decreasing loss alone does not mean the model is helpful, safe, or good at chat.
+The script fixes random seeds, hashes the corpus, saves model configuration and optimizer state, reports measured training/validation cross-entropy, and periodically writes checkpoints. `generate.py` loads a trusted checkpoint and samples bytes locally; a tiny model can produce incoherent or mostly random text. Validation is a random batch from a held-out suffix; for serious research, add a stable evaluation suite and document corpus provenance, splits, deduplication, and licensing. A decreasing loss alone does not mean the model is helpful, safe, or good at chat.
 
 ## Next engineering milestones
 
