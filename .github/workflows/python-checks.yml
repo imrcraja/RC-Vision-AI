@@ -1,0 +1,30 @@
+name: Python research checks
+on:
+  push:
+    branches: [main]
+    paths:
+      - "src/**"
+      - "tests/**"
+      - "training/**"
+      - ".github/workflows/python-checks.yml"
+  pull_request:
+    paths:
+      - "src/**"
+      - "tests/**"
+      - "training/**"
+      - ".github/workflows/python-checks.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Compile Python source
+        run: python -m py_compile training/llm/train.py training/data/validate_manifest.py src/rc_vision_ai/*.py
+      - name: Run standard-library tests
+        run: PYTHONPATH=src python -m unittest discover -s tests -v
