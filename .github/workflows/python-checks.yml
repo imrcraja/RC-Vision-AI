@@ -25,7 +25,7 @@ jobs:
         with:
           python-version: "3.12"
       - name: Compile Python source
-        run: python -m py_compile training/llm/train.py training/llm/generate.py training/image/model.py training/data/validate_manifest.py src/rc_vision_ai/*.py
+        run: python -m py_compile training/llm/train.py training/llm/generate.py training/llm/model_size.py training/image/model.py training/data/validate_manifest.py src/rc_vision_ai/*.py
       - name: Run static sandbox red-team audit
         run: python training/evaluation/sandbox_redteam.py
       - name: Run standard-library tests
