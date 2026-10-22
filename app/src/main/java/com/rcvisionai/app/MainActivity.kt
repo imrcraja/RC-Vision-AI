@@ -268,10 +268,10 @@ class MainActivity : Activity() {
     }
 
     private fun chatPage() {
-        OpenRouterChatPanel.render(this, body)
+        LocalModelPanel.render(this, body)
         val local = card()
         local.addView(text("LOCAL MODEL STATUS", 12f, accent, true))
-        local.addView(text("Original LLM abhi research/training stage mein hai; OpenRouter chat cloud API se chalta hai aur local model ka replacement nahi hai.", 13f, muted))
+        local.addView(text("Original LLM hamara khud ka model hai. Koi third-party LLM API ya cloud fallback use nahi hota. Android inference abhi integrate hona baaki hai.", 13f, muted))
         body.addView(local)
     }
 
