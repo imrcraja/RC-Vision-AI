@@ -24,7 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 45
     env:
-      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}\n      OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}\n      OPENROUTER_MODEL: ${{ vars.OPENROUTER_MODEL }}
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
@@ -41,7 +41,7 @@ jobs:
 
       - name: Run ZIP packaging tests and syntax checks
         run: |
-          python -m py_compile training/llm/train.py training/llm/generate.py training/llm/gemini_corpus.py training/image/train_autoencoder.py training/image/train_diffusion.py training/image/generate_image.py training/image/model.py training/image/test_research.py training/package_daily_learning.py
+          python -m py_compile training/llm/train.py training/llm/generate.py training/llm/gemini_corpus.py training/llm/openrouter_corpus.py training/image/train_autoencoder.py training/image/train_diffusion.py training/image/generate_image.py training/image/model.py training/image/test_research.py training/package_daily_learning.py
           python -m unittest discover -s tests -p 'test_daily_package.py' -v
           PYTHONPATH=training/image python -m unittest discover -s training/image -p 'test_research.py' -v
 
@@ -57,14 +57,19 @@ jobs:
         shell: bash
         run: |
           mkdir -p artifacts
-          if [ -n "$GEMINI_API_KEY" ]; then
+          if [ -n "$OPENROUTER_API_KEY" ]; then
+            python training/llm/openrouter_corpus.py \
+              --base-corpus training/corpus/rc_vision_original.txt \
+              --output artifacts/daily-training-corpus.txt \
+              --topics 2
+          elif [ -n "$GEMINI_API_KEY" ]; then
             python training/llm/gemini_corpus.py \
               --base-corpus training/corpus/rc_vision_original.txt \
               --output artifacts/daily-training-corpus.txt \
               --topics 2
           else
             cp training/corpus/rc_vision_original.txt artifacts/daily-training-corpus.txt
-            echo "GEMINI_API_KEY is not configured; using the checked-in seed corpus today."
+            echo "No OPENROUTER_API_KEY or GEMINI_API_KEY is configured; using the checked-in seed corpus today."
           fi
 
       - name: Locate a compatible cached LLM checkpoint
