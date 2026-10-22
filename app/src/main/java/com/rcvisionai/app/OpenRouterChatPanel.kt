@@ -4,191 +4,76 @@ import android.app.Activity
 import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
-import android.view.View
-import android.view.ViewGroup
 import android.view.Gravity
+import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
 import android.widget.LinearLayout
-import android.widget.ScrollView
 import android.widget.TextView
-import org.json.JSONArray
-import org.json.JSONObject
-import java.net.HttpURLConnection
-import java.net.URL
-import kotlin.concurrent.thread
+import android.widget.Toast
 
-/** OpenRouter chat client. Credentials are used in memory only and are never written to disk. */
+/** Local-only research console. No network requests are made from this screen. */
 internal object OpenRouterChatPanel {
-    private const val ENDPOINT = "https://openrouter.ai/api/v1/chat/completions"
     private val muted = Color.rgb(164, 174, 194)
     private val accent = Color.rgb(95, 145, 255)
 
     fun render(activity: Activity, host: LinearLayout) {
-        host.addView(label(activity, "RC Vision Chat", 25f, Color.WHITE, true))
-        host.addView(label(activity, "Online API chat. Save karne par key Android Keystore se encrypted form mein device par rahegi.", 14f, muted, false))
-        val key = field(activity, "OpenRouter API key", true).apply { setText(ApiKeyVault.load(activity).orEmpty()) }
-        val model = field(activity, "Model ID", false).apply { setText("openrouter/auto") }
-        host.addView(label(activity, "PRIVATE API KEY", 12f, accent, true))
-        host.addView(key, matchWrap())
-        val keyActions = LinearLayout(activity).apply { orientation = LinearLayout.HORIZONTAL }
-        val saveKey = Button(activity).apply {
-            text = "Save encrypted key"; isAllCaps = false
-            setOnClickListener {
-                val value = key.text.toString().trim()
-                if (!value.startsWith("sk-or-")) {
-                    android.widget.Toast.makeText(activity, "OpenRouter key format check karo.", android.widget.Toast.LENGTH_SHORT).show()
-                } else {
-                    try {
-                        ApiKeyVault.save(activity, value)
-                        android.widget.Toast.makeText(activity, "Key device par encrypted save ho gayi.", android.widget.Toast.LENGTH_LONG).show()
-                    } catch (e: Exception) {
-                        android.widget.Toast.makeText(activity, "Key save fail: ${e.message}", android.widget.Toast.LENGTH_LONG).show()
-                    }
-                }
-            }
-        }
-        val forgetKey = Button(activity).apply {
-            text = "Forget key"; isAllCaps = false
-            setOnClickListener {
-                ApiKeyVault.clear(activity); key.setText("")
-                android.widget.Toast.makeText(activity, "Saved key clear ho gayi.", android.widget.Toast.LENGTH_SHORT).show()
-            }
-        }
-        keyActions.addView(saveKey, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
-        keyActions.addView(forgetKey, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
-        host.addView(keyActions, matchWrap())
-        host.addView(label(activity, "MODEL ID", 12f, accent, true))
-        host.addView(model, matchWrap())
-
-        val transcript = LinearLayout(activity).apply {
+        host.addView(label(activity, "RC Vision AI • Local Lab", 25f, Color.WHITE, true))
+        host.addView(label(activity, "Apna original model. Is screen se koi third-party LLM/API call nahi hoti.", 14f, muted, false))
+        val status = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(12, 12, 12, 12)
+            setPadding(14, 14, 14, 14)
             background = rounded(Color.rgb(19, 24, 36))
         }
-        val scroll = ScrollView(activity).apply { addView(transcript) }
-        host.addView(scroll, LinearLayout.LayoutParams(-1, 500).apply { topMargin = 12; bottomMargin = 10 })
-        val prompt = field(activity, "Message likho…", false).apply { minLines = 2; maxLines = 5; gravity = Gravity.TOP }
+        status.addView(label(activity, "MODEL STATUS", 12f, accent, true))
+        status.addView(label(activity, "Research trainer: repository mein available", 15f, Color.WHITE, true))
+        status.addView(label(activity, "Android inference: abhi integrated nahi hai", 14f, muted, false))
+        status.addView(label(activity, "Is APK mein trained checkpoint bundled nahi hai. Isliye fake AI response nahi dikhaya jayega.", 13f, muted, false))
+        host.addView(status, matchWrap())
+
+        val prompt = EditText(activity).apply {
+            hint = "Apne local model ke liye prompt / training idea likho…"
+            setHintTextColor(muted); setTextColor(Color.WHITE); textSize = 15f
+            minLines = 3; maxLines = 7; gravity = Gravity.TOP
+            setPadding(12, 12, 12, 12)
+            background = rounded(Color.rgb(14, 18, 28))
+        }
         host.addView(prompt, matchWrap())
-        val send = Button(activity).apply {
-            text = "Send to OpenRouter"; isAllCaps = false; setTextColor(Color.WHITE); background = rounded(accent)
+        val output = TextView(activity).apply {
+            text = "Task log yahan dikhega. Local model runtime connect hone ka wait hai."
+            textSize = 13f; setTextColor(muted); setPadding(12, 12, 12, 12)
+            background = rounded(Color.rgb(19, 24, 36))
         }
-        host.addView(send, matchWrap())
-        val messages = JSONArray()
-        var busy = false
-        lateinit var batch: Button
-        batch = Button(activity).apply {
-            text = "Run multiple tasks (one per line)"; isAllCaps = false
+        host.addView(output, matchWrap())
+        host.addView(Button(activity).apply {
+            text = "Save prompt locally"; isAllCaps = false
             setOnClickListener {
-                if (busy) return@setOnClickListener
-                val token = key.text.toString().trim().ifEmpty { ApiKeyVault.load(activity).orEmpty() }
-                val modelId = model.text.toString().trim().ifEmpty { "openrouter/auto" }
-                val tasks = prompt.text.toString().lines().map { it.trim() }.filter { it.isNotEmpty() }
-                if (token.isBlank()) {
-                    addLine(activity, transcript, "Status", "Pehle API key enter karke Save encrypted key dabao.")
-                    return@setOnClickListener
-                }
-                if (tasks.isEmpty()) {
-                    addLine(activity, transcript, "Status", "Har task ko alag line par likho.")
-                    return@setOnClickListener
-                }
-                busy = true
-                send.isEnabled = false
-                batch.isEnabled = false
-                batch.text = "Batch running…"
-                prompt.setText("")
-                addLine(activity, transcript, "Batch", "0/${tasks.size} tasks complete. Sequentially process ho rahe hain.")
-                thread(name = "openrouter-batch") {
-                    tasks.forEachIndexed { index, task ->
-                        activity.runOnUiThread { addLine(activity, transcript, "Progress", "Task ${index + 1}/${tasks.size}: ${task.take(100)}") }
-                        val single = JSONArray().put(JSONObject().put("role", "user").put("content", task))
-                        val (answer, error) = request(token, modelId, single)
-                        activity.runOnUiThread {
-                            addLine(activity, transcript, if (answer != null) "Task ${index + 1} result" else "Task ${index + 1} error", answer ?: (error ?: "Unknown error"))
-                            addLine(activity, transcript, "Progress", "${index + 1}/${tasks.size} tasks processed")
-                            scroll.post { scroll.fullScroll(View.FOCUS_DOWN) }
-                        }
-                    }
-                    activity.runOnUiThread {
-                        addLine(activity, transcript, "Batch status", "All ${tasks.size} tasks processed. Check each result/error above.")
-                        busy = false
-                        send.isEnabled = true
-                        batch.isEnabled = true
-                        batch.text = "Run multiple tasks (one per line)"
-                    }
+                val value = prompt.text.toString().trim()
+                if (value.isBlank()) Toast.makeText(activity, "Pehle prompt likho.", Toast.LENGTH_SHORT).show()
+                else {
+                    val prefs = activity.getSharedPreferences("rc_vision_local_lab", Activity.MODE_PRIVATE)
+                    val old = prefs.getString("saved_prompts", "").orEmpty()
+                    prefs.edit().putString("saved_prompts", (old + "\n" + value).trim().takeLast(20000)).apply()
+                    output.text = "Saved locally ✓\nPrompt training notebook ke liye save hua. Model inference abhi unavailable hai."
                 }
             }
-        }
-        host.addView(batch, matchWrap())
-        send.setOnClickListener {
-            if (busy) return@setOnClickListener
-            val token = key.text.toString().trim()
-            val modelId = model.text.toString().trim().ifEmpty { "openrouter/auto" }
-            val userText = prompt.text.toString().trim()
-            if (token.isBlank()) { addLine(activity, transcript, "Status", "OpenRouter API key enter karo."); return@setOnClickListener }
-            if (userText.isBlank()) { addLine(activity, transcript, "Status", "Pehle message likho."); return@setOnClickListener }
-            messages.put(JSONObject().put("role", "user").put("content", userText))
-            addLine(activity, transcript, "You", userText)
-            prompt.setText("")
-            busy = true; send.isEnabled = false; send.text = "Waiting…"
-            thread(name = "openrouter-chat") {
-                val (answer, error) = request(token, modelId, messages)
-                activity.runOnUiThread {
-                    if (answer != null) {
-                        messages.put(JSONObject().put("role", "assistant").put("content", answer))
-                        transcript.removeAllViews()
-                        for (i in 0 until messages.length()) {
-                            val item = messages.optJSONObject(i) ?: continue
-                            addLine(activity, transcript, if (item.optString("role") == "user") "You" else "RC Vision AI", item.optString("content"))
-                        }
-                    } else addLine(activity, transcript, "API error", error ?: "Unknown error")
-                    scroll.post { scroll.fullScroll(View.FOCUS_DOWN) }
-                    busy = false; send.isEnabled = true; send.text = "Send to OpenRouter"
-                }
+        }, matchWrap())
+        host.addView(Button(activity).apply {
+            text = "Run own local LLM"; isAllCaps = false
+            setOnClickListener {
+                output.text = "STATUS: BLOCKED — Android app abhi trained checkpoint/runtime load nahi karti.\n\nNo API fallback will be used. Next: checkpoint import, local inference runtime aur benchmark tests."
             }
-        }
-        host.addView(label(activity, "Note: yeh API chat hai. Is build mein abhi isolated code sandbox / tool execution connected nahi hai.", 12f, muted, false))
+        }, matchWrap())
     }
 
-    private fun request(token: String, model: String, messages: JSONArray): Pair<String?, String?> {
-        var conn: HttpURLConnection? = null
-        return try {
-            conn = (URL(ENDPOINT).openConnection() as HttpURLConnection).apply {
-                requestMethod = "POST"; connectTimeout = 20000; readTimeout = 60000; doOutput = true
-                setRequestProperty("Authorization", "Bearer $token")
-                setRequestProperty("Content-Type", "application/json")
-                setRequestProperty("HTTP-Referer", "https://github.com/imrcraja/RC-Vision-AI")
-                setRequestProperty("X-Title", "RC Vision AI")
-            }
-            val payload = JSONObject().put("model", model).put("messages", messages).put("temperature", 0.7).toString()
-            conn.outputStream.use { it.write(payload.toByteArray(Charsets.UTF_8)) }
-            val status = conn.responseCode
-            val stream = if (status in 200..299) conn.inputStream else conn.errorStream
-            val raw = stream?.bufferedReader()?.use { it.readText() }.orEmpty()
-            val json = JSONObject(raw)
-            if (status !in 200..299) null to (json.optJSONObject("error")?.optString("message") ?: "HTTP $status")
-            else {
-                val value = json.optJSONArray("choices")?.optJSONObject(0)?.optJSONObject("message")?.optString("content")
-                if (value.isNullOrBlank()) null to "Empty response from API" else value to null
-            }
-        } catch (e: Exception) {
-            null to "${e.javaClass.simpleName}: ${e.message ?: "network error"}"
-        } finally { conn?.disconnect() }
-    }
-
-    private fun addLine(a: Activity, host: LinearLayout, who: String, value: String) {
-        host.addView(label(a, who, 12f, accent, true))
-        host.addView(label(a, value, 14f, Color.WHITE, false).apply { setPadding(2, 2, 2, 12) })
-    }
-    private fun field(a: Activity, hintText: String, secret: Boolean) = EditText(a).apply {
-        hint = hintText; setHintTextColor(muted); setTextColor(Color.WHITE); setPadding(14, 12, 14, 12)
-        background = rounded(Color.rgb(22, 28, 42)); isSingleLine = !secret
-        if (secret) inputType = android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD
-    }
-    private fun label(a: Activity, value: String, size: Float, color: Int, bold: Boolean) = TextView(a).apply {
-        text = value; textSize = size; setTextColor(color); if (bold) setTypeface(typeface, Typeface.BOLD)
-        setPadding(2, 4, 2, 4); textIsSelectable = true
-    }
+    private fun label(activity: Activity, value: String, size: Float, color: Int, bold: Boolean) =
+        TextView(activity).apply {
+            text = value; textSize = size; setTextColor(color)
+            if (bold) setTypeface(typeface, Typeface.BOLD)
+            setPadding(2, 3, 2, 5)
+        }
     private fun rounded(color: Int) = GradientDrawable().apply { setColor(color); cornerRadius = 18f }
-    private fun matchWrap() = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+    private fun matchWrap() = LinearLayout.LayoutParams(
+        ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
+    ).apply { topMargin = 10 }
 }
