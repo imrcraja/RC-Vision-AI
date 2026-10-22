@@ -74,6 +74,8 @@ internal object OpenRouterChatPanel {
             text = "Send to OpenRouter"; isAllCaps = false; setTextColor(Color.WHITE); background = rounded(accent)
         }
         host.addView(send, matchWrap())
+        val messages = JSONArray()
+        var busy = false
         lateinit var batch: Button
         batch = Button(activity).apply {
             text = "Run multiple tasks (one per line)"; isAllCaps = false
@@ -118,8 +120,6 @@ internal object OpenRouterChatPanel {
             }
         }
         host.addView(batch, matchWrap())
-        val messages = JSONArray()
-        var busy = false
         send.setOnClickListener {
             if (busy) return@setOnClickListener
             val token = key.text.toString().trim()
