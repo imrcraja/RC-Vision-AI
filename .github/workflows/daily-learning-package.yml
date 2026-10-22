@@ -71,7 +71,8 @@ jobs:
         id: prior
         shell: bash
         run: |
-          latest="$(find artifacts/llm -maxdepth 1 -type f -name 'checkpoint-*.pt' -print 2>/dev/null | sort -V | tail -n 1)"
+          mkdir -p artifacts/llm
+          latest="$(find artifacts/llm -maxdepth 1 -type f -name 'checkpoint-*.pt' -print | sort -V | tail -n 1)"
           if [ -n "$latest" ]; then
             echo "path=$latest" >> "$GITHUB_OUTPUT"
             echo "Found checkpoint: $latest"
