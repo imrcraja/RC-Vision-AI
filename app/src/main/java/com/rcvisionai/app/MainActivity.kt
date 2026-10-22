@@ -268,13 +268,11 @@ class MainActivity : Activity() {
     }
 
     private fun chatPage() {
-        body.addView(text("RC Vision Chat", 25f, Color.WHITE, true))
-        body.addView(text("The local LLM is a separate original-model milestone. No cloud model or third-party AI API is connected.", 14f, muted))
-        val c = card()
-        c.addView(text("MODEL STATUS", 12f, accent, true))
-        c.addView(text("No trained LLM loaded", 18f, Color.WHITE, true))
-        c.addView(text("A random-init Transformer trainer and local sampling CLI now exist in the repository. This APK still has no trained checkpoint or integrated inference runtime.", 13f, muted))
-        body.addView(c)
+        OpenRouterChatPanel.render(this, body)
+        val local = card()
+        local.addView(text("LOCAL MODEL STATUS", 12f, accent, true))
+        local.addView(text("Original LLM abhi research/training stage mein hai; OpenRouter chat cloud API se chalta hai aur local model ka replacement nahi hai.", 13f, muted))
+        body.addView(local)
     }
 
     private fun trainPage() {
@@ -294,7 +292,7 @@ class MainActivity : Activity() {
         body.addView(text("Settings & privacy", 25f, Color.WHITE, true))
         val c = card()
         c.addView(text("LOCAL DATA", 12f, accent, true))
-        c.addView(text("This starter app has no Internet permission and makes no network requests. Saved prompts stay in app-private storage.", 14f, muted))
+        c.addView(text("Saved prompts stay in app-private storage. OpenRouter chat uses Internet only when you send a request; saved API keys are encrypted with Android Keystore.", 14f, muted))
         c.addView(button("Clear saved prompts") {
             workspace.clearPrompts()
             Toast.makeText(this, "Saved prompts cleared.", Toast.LENGTH_SHORT).show()
@@ -302,6 +300,7 @@ class MainActivity : Activity() {
         }, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(48)).apply {
             topMargin = dp(14)
         })
+        DeviceMonitorPanel.render(this, c)
         body.addView(c)
 
         val export = card()
@@ -316,7 +315,7 @@ class MainActivity : Activity() {
 
         val about = card()
         about.addView(text("ABOUT RC VISION AI", 12f, accent, true))
-        about.addView(text("Independent project. No third-party AI APIs, no bundled pretrained model, and no external AI engine.", 14f, Color.WHITE))
+        about.addView(text("Independent project. OpenRouter can power online chat when configured. The original local LLM and rendering engines remain research prototypes.", 14f, Color.WHITE))
         about.addView(text("Version 0.1.0 • Runtime foundation only", 12f, muted))
         body.addView(about)
     }
