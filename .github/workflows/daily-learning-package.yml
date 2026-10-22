@@ -41,8 +41,9 @@ jobs:
 
       - name: Run ZIP packaging tests and syntax checks
         run: |
-          python -m py_compile training/llm/train.py training/llm/generate.py training/llm/gemini_corpus.py training/image/train_autoencoder.py training/package_daily_learning.py
+          python -m py_compile training/llm/train.py training/llm/generate.py training/llm/gemini_corpus.py training/image/train_autoencoder.py training/image/train_diffusion.py training/image/generate_image.py training/image/model.py training/image/test_research.py training/package_daily_learning.py
           python -m unittest discover -s tests -p 'test_daily_package.py' -v
+          PYTHONPATH=training/image python -m unittest discover -s training/image -p 'test_research.py' -v
 
       - name: Restore best-effort prior LLM checkpoint cache
         uses: actions/cache/restore@v4
@@ -70,7 +71,8 @@ jobs:
         id: prior
         shell: bash
         run: |
-          latest="$(find artifacts/llm -maxdepth 1 -type f -name 'checkpoint-*.pt' -print 2>/dev/null | sort -V | tail -n 1)"
+          mkdir -p artifacts/llm
+          latest="$(find artifacts/llm -maxdepth 1 -type f -name 'checkpoint-*.pt' -print | sort -V | tail -n 1)"
           if [ -n "$latest" ]; then
             echo "path=$latest" >> "$GITHUB_OUTPUT"
             echo "Found checkpoint: $latest"
@@ -98,14 +100,30 @@ jobs:
             --checkpoint-every 250 \
             "${RESUME_ARGS[@]}"
 
-      - name: Train image reconstruction baseline when a permitted dataset exists
+      - name: Train original image model when a permitted dataset exists
         shell: bash
         run: |
-          image_count="$(find training/images -type f \( -iname '*.png' -o -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.webp' -o -iname '*.bmp' \) 2>/dev/null | wc -l)"
-          if [ "$image_count" -ge 2 ]; then
-            python training/image/train_autoencoder.py --dataset training/images --output artifacts/image --image-size 64 --epochs 1 --batch-size 4
+          if [ -f training/images/captions.jsonl ] && [ "$(grep -c '"caption"' training/images/captions.jsonl || true)" -ge 2 ]; then
+            python training/image/train_diffusion.py --dataset training/images --manifest training/images/captions.jsonl --output artifacts/image --image-size 32 --epochs 1 --batch-size 2 --diffusion-steps 50
           else
-            echo "Image training skipped: add at least 2 permission-cleared images under training/images/."
+            image_count="$(find training/images -type f \( -iname '*.png' -o -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.webp' -o -iname '*.bmp' \) 2>/dev/null | wc -l)"
+            if [ "$image_count" -ge 2 ]; then
+              python training/image/train_autoencoder.py --dataset training/images --output artifacts/image --image-size 64 --epochs 1 --batch-size 4
+            else
+              echo "Image training skipped: add at least 2 permitted images; for conditional diffusion, also add captions.jsonl with at least 2 image/caption pairs."
+            fi
+          fi
+
+      - name: Smoke-test conditional image sampling when a checkpoint exists
+        shell: bash
+        run: |
+          if [ -f artifacts/image/conditional-diffusion.pt ]; then
+            PYTHONPATH=training/image python training/image/generate_image.py \
+              --checkpoint artifacts/image/conditional-diffusion.pt \
+              --prompt "a simple original research sample" \
+              --output artifacts/image/sample.png
+          else
+            echo "No conditional diffusion checkpoint exists yet; no prompt-based image sample is claimed."
           fi
 
       - name: Save best-effort LLM checkpoint cache
@@ -129,6 +147,6 @@ jobs:
           path: |
             artifacts/rc-vision-ai-daily-learning.zip
             artifacts/llm/latest.json
-            artifacts/image/metrics.json
+            artifacts/image/*metrics.json
           if-no-files-found: warn
           retention-days: 14
